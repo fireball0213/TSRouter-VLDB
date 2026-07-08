@@ -1,6 +1,6 @@
 # 本地复现手册
 
-本文档是内部维护文档，不进入公开 GitHub 仓库。公开运行入口以 `TSRouter-VLDB/README.md` 和 `configs/*.yaml` 为准。
+本文档说明 TSRouter-VLDB 发布版 artifact 的本地检查、解包、路径准备和复现流程。公开运行入口以 `TSRouter-VLDB/README.md` 和 `configs/*.yaml` 为准。
 
 ## 1. 环境
 
@@ -8,7 +8,7 @@
 
 ```bash
 conda activate TSFM-py311
-cd /data2/huangtj/TSRouter-v0
+cd /path/to/TSRouter-v0
 ```
 
 发布入口使用脚本路径，不使用 `python -m tsrouter_vldb`：
@@ -23,7 +23,7 @@ python TSRouter-VLDB/src/cli/tsrouter_vldb.py --version
 
 ```bash
 export TSROUTER_VLDB_ARTIFACT_ROOT="$PWD/TSRouter-VLDB"
-export TSROUTER_VLDB_HF_REPO="org/tsrouter-vldb-artifacts"
+export TSROUTER_VLDB_HF_REPO="<HF_DATASET_REPO>"
 ```
 
 新目录中的关键路径：
@@ -75,17 +75,25 @@ python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts prepare-backend --group 
 如果服务器生产根目录里保留了很多非论文参数结果，建议用隔离代码根目录测试，避免旧宽目录影响复现判断。生产根目录只负责 staging 白名单 artifact，隔离根目录只放代码和由 artifact 挂载出来的结果路径：
 
 ```bash
-export PROD_ROOT=/data2/huangtj/TSRouter-v0
-export TEST_ROOT=/data2/huangtj/TSRouter-v0-release-test
-rsync -a \
-  --exclude 'results_csv/' \
-  --exclude 'results_artifacts/' \
-  --exclude 'Dataset/Repr_data_sourse/' \
-  --exclude 'figs/vldb_results/' \
-  "$PROD_ROOT/" "$TEST_ROOT/"
-export TSROUTER_VLDB_ARTIFACT_ROOT="$PROD_ROOT/TSRouter-VLDB"
-python "$PROD_ROOT/TSRouter-VLDB/src/cli/tsrouter_vldb.py" artifacts prepare-backend --group all --legacy-root "$TEST_ROOT" --apply
+export PROD_ROOT=/path/to/TSRouter-v0
+export TEST_ROOT=/path/to/TSRouter-v0-release-test
+
+rm -rf "$TEST_ROOT"
+mkdir -p "$TEST_ROOT"
+
+rsync -a "$PROD_ROOT/TSRouter-VLDB/" "$TEST_ROOT/TSRouter-VLDB/"
+rsync -a "$PROD_ROOT/src/" "$TEST_ROOT/src/"
+
+cd "$TEST_ROOT"
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts prepare-backend \
+  --group all \
+  --legacy-root "$TEST_ROOT" \
+  --mode symlink \
+  --apply
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts check --group all --skip-archives
 ```
+
+隔离根目录不复制旧的 `results_csv/`、`results_artifacts/`、完整 `Dataset/` 和 `Model/`。`reuse all` 会先检查发布版 artifact，检查通过后直接使用 artifact-backed skip，不读取完整 Arrow 数据集和模型权重。`reuse none` 用于重算，需要完整 benchmark 数据和模型权重。
 
 后续 workflow 测试也使用同一个 `--legacy-root "$TEST_ROOT"`。
 
@@ -114,7 +122,12 @@ python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run --mode fast --reuse a
 artifact 迁移完成后执行：
 
 ```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run --mode fast --reuse all --legacy-root "$TEST_ROOT" --execute
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run \
+  --mode fast \
+  --reuse all \
+  --legacy-root "$TEST_ROOT" \
+  --python-bin "$(which python)" \
+  --execute
 ```
 
 等价脚本：
@@ -123,7 +136,7 @@ python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run --mode fast --reuse a
 bash TSRouter-VLDB/scripts/run_local_fast.sh --legacy-root "$TEST_ROOT" --execute
 ```
 
-快速复现包含 TSFM reuse、PROFILE reuse、TSRouter-main/fast ROUTE、summary table refresh。
+快速复现包含 TSFM、PROFILE、TSRouter-main/fast ROUTE 和 summary table 的 artifact 复用检查。
 
 ## 7. 全流程复现
 
@@ -136,7 +149,12 @@ python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run --mode full --reuse a
 artifact 迁移完成后执行：
 
 ```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run --mode full --reuse all --legacy-root "$TEST_ROOT" --execute
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run \
+  --mode full \
+  --reuse all \
+  --legacy-root "$TEST_ROOT" \
+  --python-bin "$(which python)" \
+  --execute
 ```
 
 等价脚本：

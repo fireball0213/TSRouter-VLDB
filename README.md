@@ -11,9 +11,11 @@ The first artifact release focuses on the stage-20 main experiment, TSRouter-mai
 Set the Hugging Face Dataset repo and local artifact root:
 
 ```bash
-export TSROUTER_VLDB_HF_REPO="org/tsrouter-vldb-artifacts"
+export TSROUTER_VLDB_HF_REPO="<HF_DATASET_REPO>"
 export TSROUTER_VLDB_ARTIFACT_ROOT="/path/to/TSRouter-VLDB"
 ```
+
+Replace `<HF_DATASET_REPO>` with the released Hugging Face Dataset repository. If artifact bundles are already present under `TSRouter-VLDB/`, the repository variable is not required.
 
 Inspect the required bundles:
 
@@ -24,7 +26,7 @@ python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts plan --group core
 Download the core artifact bundles:
 
 ```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts pull --repo-id org/tsrouter-vldb-artifacts --group core
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts pull --repo-id "$TSROUTER_VLDB_HF_REPO" --group core
 ```
 
 Check the local release layout:
@@ -63,6 +65,18 @@ python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --stage 20 --write
 Commands print a dry execution plan by default. Add `--execute` to run the generated backend commands after checking the plan.
 
 ## Workflows
+
+One-command public reproduction with readable progress and table previews:
+
+```bash
+bash TSRouter-VLDB/scripts/run_public_reproduction.sh \
+  --root "$PWD" \
+  --python-bin "$(which python)" \
+  --mode full
+```
+
+If the artifact bundles are not already present under `TSRouter-VLDB/`, add `--pull --repo-id "$TSROUTER_VLDB_HF_REPO"`.
+The script writes full JSON logs to `TSRouter-VLDB/reproduction_logs/` and prints a concise workflow summary plus released table previews.
 
 Fast artifact-backed reproduction:
 

@@ -4,6 +4,9 @@ __pycache__/
 artifacts/
 data/profile_sources/
 bundles/
+reproduction_logs/
+*_hf_upload*/
+*_hf_upload_*/
 docs/
 manifest.json
 checksums.sha256
