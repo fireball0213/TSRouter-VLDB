@@ -1,0 +1,108 @@
+# TSRouter-VLDB paper run profiles.
+# The main method profile mirrors src/cli/vldb_fast_baselines.py::VLDB_RESULTS_MAIN_PARAM_GRID.
+schema_version: 1
+default_stage: 20
+
+main_profile:
+  name: "TSRouter-main"
+  repr_encoder: "StatsRandomFourier"
+  encoder_type: "StatsRandom"
+  encoder_structure: "Fourier"
+  train_encoder_epochs: 100
+  context_len: 512
+  batch_size: 128
+  tsfm_results_dir: "cl_512"
+  rank_truth_cls: "cl512"
+  repr_input_dim: 512
+  repr_output_dim: 256
+  repr_sub_pred_len: 480
+  zoo_repr_set: "c-e-n-h-w-s"
+  repr_size: 3000
+  repr_v: 4
+  base_metrics: "C"
+  repr_weight_ratio: 0.5
+  sample_repr_num: 20
+  repr_data_seed: 2029
+  repr_encoder_seed: 2025
+  forward_seed: 2025
+  search_seed: 2025
+  repr_sample_qc_mode: "strict"
+  repr_scale_protocol: "standard"
+  task_sample_strategy: "latest_random"
+  task_sample_version: 2
+  repr_anchor_protocol: "window"
+  repr_anchor_window_sample_strategy: "first"
+  task_window_sample_strategy: "even"
+  sample_repr_ratio: 0.0
+  task_rank_top3_instability_threshold: -1.0
+  task_channel_fuse_limit: "all"
+  route_family_mode: "default"
+  sample_mode: "cluster_nearest"
+  model_repr_mode: "all"
+  subset_top_k: 0
+  subset_perf_scale: 1.0
+  rank_decay_coef: 1.0
+  repr_distance_metric: "cos"
+  model_repr_agg: "min"
+  enable_process_metrics: true
+  process_metrics_region_rule: "effective"
+  skip_step2_cluster_forward: true
+  route_efficiency_mode: false
+  ge_fast_eval: true
+  mix_route: false
+  mix_route_model_num: 0
+  ensemble_size: 1
+  ensemble_agg: "median"
+  restrict_top_model_num: 1
+
+fast_profile:
+  name: "TSRouter-fast"
+  inherits: "TSRouter-main"
+  route_efficiency_mode: true
+  runtime_prior: "stored_tsfm_forward_runtime"
+
+baseline_methods:
+  artifact_policy:
+    Random: "Reconstructed from stage20 TSFM cl_512 results during VLDB summary generation."
+    Recent: "Reconstructed from stage20 TSFM cl_512 results during VLDB summary generation."
+    Task-probe: "Reconstructed from TSRouter-main Mix-route outputs, Task_probe_Select summaries, and the stage20 task cache."
+  deployable:
+    - "TSRouter-main"
+    - "TSRouter-fast"
+    - "AutoForecast"
+    - "AutoXPCR"
+    - "SimpleTS"
+    - "Profile-probe-M"
+    - "Profile-probe-C"
+    - "Random"
+    - "Recent"
+    - "Task-probe"
+    - "MetaFeature-GBDT"
+    - "MetaFeature-MLP"
+    - "Task-Oracle"
+  references:
+    - "Current_best-M"
+    - "Current_best-C"
+
+reuse_groups:
+  tsfm:
+    - "tsfm_results_stage20"
+  profile:
+    - "profile_sources"
+    - "tsrouter_core_stage20"
+  route:
+    - "tsfm_results_stage20"
+    - "tsrouter_core_stage20"
+    - "task_cache_stage20"
+  insert:
+    - "tsrouter_core_stage20"
+  baselines:
+    - "tsfm_results_stage20"
+    - "tsrouter_core_stage20"
+    - "baselines_stage20"
+    - "task_cache_stage20"
+  summary:
+    - "tsfm_results_stage20"
+    - "tsrouter_core_stage20"
+    - "baselines_stage20"
+    - "tables_figures_stage20"

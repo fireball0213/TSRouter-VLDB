@@ -1,0 +1,20 @@
+[project]
+name = "tsrouter-vldb"
+version = "0.1.0"
+description = "TSRouter-VLDB reproduction package."
+requires-python = ">=3.11"
+dependencies = [
+  "huggingface-hub>=0.36.0",
+  "PyYAML>=6.0",
+  "rich>=14.0",
+]
+
+[project.scripts]
+tsrouter-vldb = "tsrouter_vldb.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

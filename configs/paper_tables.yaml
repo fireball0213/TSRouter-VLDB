@@ -1,0 +1,98 @@
+# TSRouter-VLDB paper table reproduction contract.
+schema_version: 1
+paper_source: "paper/VLDB_tex/main.tex"
+
+artifact_commitment:
+  reproduce_main_tables: true
+  reproduce_deferred_ablation_tables: false
+  reproduce_all_figures: false
+  publish_generated_figures: true
+  publish_figure_sources: true
+
+core_artifacts:
+  - "model_registry"
+  - "release_order_arrival_stream"
+  - "fixed_probe_split"
+  - "routing_requests"
+  - "per_request_quality_summaries"
+  - "selected_model_traces"
+  - "profile_tables"
+  - "route_index_metadata"
+  - "tsrouter_fast_runtime_summaries"
+  - "route_latency_logs"
+  - "insert_maintenance_logs"
+  - "raw_model_level_results"
+  - "per_dataset_metric_breakdowns"
+  - "selector_refresh_logs"
+  - "registry_compatibility_metadata"
+  - "timing_row_flags"
+  - "source_domain_manifest"
+  - "anchor_provenance"
+  - "metric_specific_winner_partitions"
+
+tables:
+  - id: "model_zoo_table"
+    required: true
+    artifact_inputs:
+      - "artifacts/tsfm_results/"
+      - "configs/model_registry.yaml"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table model-zoo --stage 20 --write"
+
+  - id: "baseline_fairness_table"
+    required: true
+    artifact_inputs:
+      - "configs/paper_run_profiles.yaml"
+      - "artifacts/baseline_results/"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table baseline-fairness --stage 20 --write"
+
+  - id: "main_quality_efficiency_table"
+    required: true
+    artifact_inputs:
+      - "artifacts/tsfm_results/"
+      - "artifacts/tsrouter_core/"
+      - "artifacts/baseline_results/"
+      - "artifacts/task_sample_cache/"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table main-quality-efficiency --stage 20 --write"
+
+  - id: "overhead_breakdown_table"
+    required: true
+    artifact_inputs:
+      - "artifacts/tsrouter_core/"
+      - "artifacts/baseline_results/"
+      - "artifacts/tsfm_results/"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table overhead-breakdown --stage 20 --write"
+
+  - id: "growth_overhead_table"
+    required: true
+    artifact_inputs:
+      - "artifacts/tsrouter_core/"
+      - "artifacts/baseline_results/"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table growth-overhead --stage 20 --write"
+
+  - id: "profile_route_diagnostic_table"
+    required: true
+    artifact_inputs:
+      - "artifacts/tsrouter_core/"
+      - "artifacts/task_sample_cache/"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table profile-route-diagnostics --stage 20 --write"
+
+deferred_tables:
+  - id: "component_ablation_table"
+    required: false
+    release_status: "deferred"
+    artifact_policy: "Ablation caches and result files are outside the first public artifact bundle."
+    excluded_examples:
+      - "results_artifacts/caches/GE_test_sample/cl512_n1_std_wseven_ss2025.*"
+      - "results_artifacts/caches/GE_test_sample/cl512_n10_std_wseven_ss2025.*"
+      - "*ablation*"
+
+figures:
+  policy: "publish_generated_figures_and_source_csv; plotting_scripts_optional"
+  reason: "The paper promises scripts for reproducing all tables, but does not explicitly promise scripts for all figures."
+  release_inputs:
+    - "artifacts/tables_figures/"
+    - "figs/vldb_results/stage20/"
+
+validation:
+  required_command: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary check --stage 20"
+  git_boundary: "Only TSRouter-VLDB should change during release packaging until explicit migration starts."

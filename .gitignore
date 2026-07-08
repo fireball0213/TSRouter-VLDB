@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.cache/
+artifacts/
+data/profile_sources/
+bundles/
+docs/
+manifest.json
+checksums.sha256

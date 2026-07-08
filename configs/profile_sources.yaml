@@ -1,0 +1,59 @@
+# TSRouter-VLDB profile source contract.
+schema_version: 1
+paper_claim: "PROFILE anchors are sampled by domain from the public pretraining data of Chronos, Moirai, and TimesFM."
+backend_token_set: "c-e-n-h-w-s"
+release_profile_source_set: "chronos+moirai_timesfm_domain_stratified"
+
+sources:
+  - release_id: "chronos"
+    backend_token: "c"
+    backend_path_hint: "Dataset/Repr_data_sourse/c62.tsf"
+    release_path: "data/profile_sources/chronos/chronos_profile_source.tsf"
+    paper_label: "Chronos pretraining source"
+    source_family: "Chronos"
+    required_for_main_results: true
+
+  - release_id: "domain_energy"
+    backend_token: "e"
+    backend_path_hint: "Dataset/Repr_data_sourse/energy_num1w_len992_sd2029_std.npy"
+    release_path: "data/profile_sources/moirai_timesfm/domain_energy.npy"
+    paper_label: "domain-stratified sample from Moirai and TimesFM pretraining sources"
+    source_family: "Moirai+TimesFM"
+    required_for_main_results: true
+
+  - release_id: "domain_nature"
+    backend_token: "n"
+    backend_path_hint: "Dataset/Repr_data_sourse/nature_num1w_len992_sd2029_std.npy"
+    release_path: "data/profile_sources/moirai_timesfm/domain_nature.npy"
+    paper_label: "domain-stratified sample from Moirai and TimesFM pretraining sources"
+    source_family: "Moirai+TimesFM"
+    required_for_main_results: true
+
+  - release_id: "domain_healthcare"
+    backend_token: "h"
+    backend_path_hint: "Dataset/Repr_data_sourse/healthcare_num1w_len992_sd2029_std.npy"
+    release_path: "data/profile_sources/moirai_timesfm/domain_healthcare.npy"
+    paper_label: "domain-stratified sample from Moirai and TimesFM pretraining sources"
+    source_family: "Moirai+TimesFM"
+    required_for_main_results: true
+
+  - release_id: "domain_web_cloudops"
+    backend_token: "w"
+    backend_path_hint: "Dataset/Repr_data_sourse/web_cloudops_num1w_len992_sd2029_std.npy"
+    release_path: "data/profile_sources/moirai_timesfm/domain_web_cloudops.npy"
+    paper_label: "domain-stratified sample from Moirai and TimesFM pretraining sources"
+    source_family: "Moirai+TimesFM"
+    required_for_main_results: true
+
+  - release_id: "domain_sales"
+    backend_token: "s"
+    backend_path_hint: "Dataset/Repr_data_sourse/sales_num1w_len992_sd2029_std.npy"
+    release_path: "data/profile_sources/moirai_timesfm/domain_sales.npy"
+    paper_label: "domain-stratified sample from Moirai and TimesFM pretraining sources"
+    source_family: "Moirai+TimesFM"
+    required_for_main_results: true
+
+public_notes:
+  - "Public docs and CLI output use release_id names."
+  - "backend_token and backend_path_hint identify the compatibility names used by the existing loaders."
+  - "Large source files are distributed through the Hugging Face Dataset, not GitHub."
