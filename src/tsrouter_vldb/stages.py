@@ -38,5 +38,27 @@ def check_stage(command: str, args: Any) -> dict[str, Any]:
 def run_stage(command: str, args: Any) -> dict[str, Any]:
     payload = build_stage_plan(command, args)
     if bool(getattr(args, "execute", False)):
+        bundles = _artifact_bundles(command)
+        artifact_check = check_artifacts(
+            group=f"{command}_required",
+            bundle_names=bundles,
+            check_archives=False,
+            check_contents=True,
+        )
+        payload["artifact_check"] = artifact_check
+        reuse = str(getattr(args, "reuse", "") or "").strip().lower()
+        if reuse == "all" and artifact_check["ok"]:
+            payload["execution_results"] = [
+                {
+                    "operation": item.get("operation", ""),
+                    "returncode": 0,
+                    "skipped": True,
+                    "reason": "artifact-backed reuse",
+                }
+                for item in payload.get("backend_commands", [])
+                if isinstance(item, dict)
+            ]
+            payload["ok"] = True
+            return payload
         payload["execution_results"] = execute_release_command_plan(payload)
     return payload

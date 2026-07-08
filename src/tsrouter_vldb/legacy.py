@@ -514,6 +514,7 @@ def _selector_baseline_command(
     *,
     python_bin: str,
     cwd: Path,
+    stage: int,
     seed: int,
     skip_saved: bool,
 ) -> BackendCommand:
@@ -521,6 +522,8 @@ def _selector_baseline_command(
     argv = _base_python_argv("cli.run_model_zoo", python_bin)
     _add_kv(argv, "--run_mode", "select")
     _add_kv(argv, "--models", model_name)
+    _add_kv(argv, "--current_zoo_num", stage)
+    _add_kv(argv, "--zoo_total_num", stage)
     argv.extend(_selector_common_args(profile, seed, include_repr_args=method not in {"Random", "Recent"}))
     if method == "Random":
         _add_kv(argv, "--seed", seed)
@@ -652,6 +655,7 @@ def _selector_baseline_commands(
     python_bin: str,
     cwd: Path,
     skip_saved: bool,
+    stage: int,
 ) -> list[BackendCommand]:
     profile = _main_profile()
     commands: list[BackendCommand] = []
@@ -666,6 +670,7 @@ def _selector_baseline_commands(
                     profile,
                     python_bin=python_bin,
                     cwd=cwd,
+                    stage=stage,
                     seed=int(seed),
                     skip_saved=skip_saved,
                 )
@@ -821,6 +826,7 @@ def build_release_command_plan(command: str, args: Any) -> dict[str, object]:
                 python_bin=python_bin,
                 cwd=cwd,
                 skip_saved=skip_saved,
+                stage=stage,
             )
         )
     elif command == "summary":

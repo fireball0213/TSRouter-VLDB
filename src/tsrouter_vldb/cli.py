@@ -7,6 +7,7 @@ from typing import Any
 
 from . import __version__, baselines, insert, profile, route, summary, tsfm
 from .artifacts import (
+    ArtifactConfigError,
     build_download_plan,
     check_artifacts,
     download_bundles,
@@ -175,7 +176,11 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    return int(args.func(args))
+    try:
+        return int(args.func(args))
+    except ArtifactConfigError as exc:
+        _print_json({"ok": False, "error": str(exc)})
+        return 2
 
 
 if __name__ == "__main__":

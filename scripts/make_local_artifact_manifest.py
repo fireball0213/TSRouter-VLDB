@@ -5,6 +5,7 @@ import csv
 import fnmatch
 import hashlib
 import json
+import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -58,10 +59,12 @@ def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
 
 
 def as_posix_relative(path: Path, root: Path = WORKSPACE_ROOT) -> str:
+    path_abs = Path(os.path.abspath(path))
+    root_abs = Path(os.path.abspath(root))
     try:
-        return path.resolve().relative_to(root.resolve()).as_posix()
+        return path_abs.relative_to(root_abs).as_posix()
     except ValueError:
-        return path.as_posix()
+        return path_abs.as_posix()
 
 
 def excluded_by_patterns(path: Path, exclude_patterns: Iterable[str]) -> bool:

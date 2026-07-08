@@ -135,13 +135,15 @@ def download_bundles(
     revision: str | None = None,
     paths: ReleasePaths | None = None,
 ) -> list[Path]:
+    release_paths = paths or ReleasePaths.from_env()
+    plan = build_download_plan(group=group, repo_id=repo_id, revision=revision, paths=release_paths)
+    if not plan["repo_id"]:
+        raise ArtifactConfigError("missing Hugging Face Dataset repo: pass --repo-id or set TSROUTER_VLDB_HF_REPO.")
     try:
         from huggingface_hub import hf_hub_download
     except ModuleNotFoundError as exc:
         raise ArtifactConfigError("huggingface-hub is required to download release artifacts.") from exc
 
-    release_paths = paths or ReleasePaths.from_env()
-    plan = build_download_plan(group=group, repo_id=repo_id, revision=revision, paths=release_paths)
     downloaded: list[Path] = []
     for bundle in plan["bundles"]:
         local_path = hf_hub_download(

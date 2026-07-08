@@ -1,6 +1,6 @@
 # TSRouter-VLDB artifact bundle layout.
 schema_version: 1
-default_hf_repo: "org/tsrouter-vldb-artifacts"
+default_hf_repo: ""
 default_revision: "main"
 local_artifact_root_env: "TSROUTER_VLDB_ARTIFACT_ROOT"
 hf_repo_env: "TSROUTER_VLDB_HF_REPO"

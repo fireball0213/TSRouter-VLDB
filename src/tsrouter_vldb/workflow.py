@@ -6,6 +6,7 @@ from typing import Any
 
 from .artifacts import check_artifacts
 from .checks import check_layout
+from .commands import COMMAND_ARTIFACT_GROUPS
 from .legacy import execute_release_command_plan
 from .stages import build_stage_plan
 
@@ -92,7 +93,12 @@ def build_workflow_plan(args: Any) -> dict[str, Any]:
         )
     if bool(getattr(args, "check_artifacts", True)):
         artifact_group = "all" if mode in {"full", "baselines"} else "core"
-        checks.append({"name": "artifacts", **check_artifacts(group=artifact_group)})
+        checks.append(
+            {
+                "name": "artifacts",
+                **check_artifacts(group=artifact_group, check_archives=False, check_contents=True),
+            }
+        )
 
     step_plans = []
     for step in WORKFLOWS[mode]:
@@ -108,11 +114,45 @@ def build_workflow_plan(args: Any) -> dict[str, Any]:
     }
 
 
+def _artifact_backed_reuse_results(step: dict[str, Any]) -> list[dict[str, Any]] | None:
+    reuse = str(step.get("reuse", "") or "").strip().lower()
+    if reuse != "all":
+        return None
+
+    command = str(step.get("command", "") or "")
+    bundles = tuple(str(item) for item in step.get("artifact_groups", ()) or COMMAND_ARTIFACT_GROUPS.get(command, ()))
+    if not bundles:
+        return None
+
+    artifact_check = check_artifacts(
+        group=f"{command}_required",
+        bundle_names=bundles,
+        check_archives=False,
+        check_contents=True,
+    )
+    if not artifact_check["ok"]:
+        return None
+
+    return [
+        {
+            "operation": item.get("operation", ""),
+            "returncode": 0,
+            "skipped": True,
+            "reason": "artifact-backed reuse",
+        }
+        for item in step.get("backend_commands", [])
+        if isinstance(item, dict)
+    ]
+
+
 def execute_workflow_plan(plan: dict[str, Any]) -> list[dict[str, Any]]:
     results = []
     for index, step in enumerate(plan.get("steps", []), start=1):
         started = time.time()
-        execution_results = execute_release_command_plan(step)
+        execution_results = _artifact_backed_reuse_results(step)
+        artifact_backed_reuse = execution_results is not None
+        if execution_results is None:
+            execution_results = execute_release_command_plan(step)
         results.append(
             {
                 "index": index,
@@ -120,6 +160,7 @@ def execute_workflow_plan(plan: dict[str, Any]) -> list[dict[str, Any]]:
                 "action": step.get("action"),
                 "returncode": 0,
                 "elapsed_seconds": round(time.time() - started, 3),
+                "artifact_backed_reuse": artifact_backed_reuse,
                 "backend_results": execution_results,
             }
         )

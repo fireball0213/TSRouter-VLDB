@@ -48,7 +48,12 @@ def format_bytes(value: int) -> str:
 
 
 def as_rel(path: Path, root: Path = WORKSPACE_ROOT) -> str:
-    return path.resolve().relative_to(root.resolve()).as_posix()
+    path_abs = Path(os.path.abspath(path))
+    root_abs = Path(os.path.abspath(root))
+    try:
+        return path_abs.relative_to(root_abs).as_posix()
+    except ValueError:
+        return path_abs.as_posix()
 
 
 def excluded(path: Path, patterns: Iterable[str]) -> bool:
@@ -150,7 +155,60 @@ def link_file(source: Path, target: Path) -> None:
         shutil.copy2(source, target)
 
 
+def _has_glob(pattern: str) -> bool:
+    return any(char in pattern for char in "*?[]")
+
+
+def _release_matches(pattern: str) -> list[Path]:
+    normalized = pattern.replace("\\", "/").rstrip("/")
+    if _has_glob(normalized):
+        return [path for path in RELEASE_ROOT.glob(normalized) if path.exists()]
+    candidate = RELEASE_ROOT / normalized
+    return [candidate] if candidate.exists() else []
+
+
+def staged_contents_ready(bundle_data: dict[str, Any]) -> bool:
+    required_paths = [str(value) for value in bundle_data.get("required_paths", [])]
+    if required_paths:
+        return all(_release_matches(pattern) for pattern in required_paths)
+    contents = [str(value).replace("\\", "/").rstrip("/") for value in bundle_data.get("contents", [])]
+    return bool(contents) and all((RELEASE_ROOT / content).exists() for content in contents)
+
+
+def stage_existing_contents(bundle_id: str, bundle_data: dict[str, Any], staging_dir: Path) -> dict[str, Any]:
+    file_count = 0
+    total_bytes = 0
+    missing_sources = []
+    optional_missing_sources = []
+    for content in [str(value).replace("\\", "/").rstrip("/") for value in bundle_data.get("contents", [])]:
+        source_root = RELEASE_ROOT / content
+        if not source_root.exists():
+            missing_sources.append(content)
+            continue
+        if source_root.is_file():
+            files = [source_root]
+        else:
+            files = [path for path in source_root.rglob("*") if path.is_file()]
+        for source in files:
+            target = staging_dir / source.relative_to(RELEASE_ROOT)
+            link_file(source, target)
+            file_count += 1
+            total_bytes += source.stat().st_size
+    return {
+        "bundle_id": bundle_id,
+        "source_mode": "staged_contents",
+        "file_count": file_count,
+        "total_bytes": total_bytes,
+        "total_human": format_bytes(total_bytes),
+        "missing_sources": missing_sources,
+        "optional_missing_sources": optional_missing_sources,
+    }
+
+
 def stage_bundle(bundle_id: str, bundle_data: dict[str, Any], profile_config: dict[str, Any], staging_dir: Path) -> dict[str, Any]:
+    if staged_contents_ready(bundle_data):
+        return stage_existing_contents(bundle_id, bundle_data, staging_dir)
+
     file_count = 0
     total_bytes = 0
     missing_sources = []
@@ -184,6 +242,7 @@ def stage_bundle(bundle_id: str, bundle_data: dict[str, Any], profile_config: di
                 total_bytes += source.stat().st_size
     return {
         "bundle_id": bundle_id,
+        "source_mode": "legacy_sources",
         "file_count": file_count,
         "total_bytes": total_bytes,
         "total_human": format_bytes(total_bytes),
@@ -242,7 +301,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Pack TSRouter-VLDB Hugging Face Dataset artifacts.")
     parser.add_argument("--out", default="TSRouter-VLDB_hf_upload")
     parser.add_argument("--group", default="all")
-    parser.add_argument("--repo-id", default="org/tsrouter-vldb-artifacts")
+    parser.add_argument("--repo-id", required=True)
     parser.add_argument("--force", action="store_true")
     return parser.parse_args()
 
