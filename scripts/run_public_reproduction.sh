@@ -60,8 +60,17 @@ run_step() {
   echo
   echo "== $label =="
   echo "$*"
-  "$@" > "$log_file"
-  echo "log: $log_file"
+  if "$@" > "$log_file" 2>&1; then
+    echo "log: $log_file"
+  else
+    local status=$?
+    echo "failed with exit code $status"
+    echo "log: $log_file"
+    if [[ -f "$log_file" ]]; then
+      sed -n '1,200p' "$log_file"
+    fi
+    return "$status"
+  fi
 }
 
 cd "$LEGACY_ROOT"
