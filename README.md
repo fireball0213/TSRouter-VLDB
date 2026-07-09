@@ -11,11 +11,11 @@ The first artifact release focuses on the stage-20 main experiment, TSRouter-mai
 Set the Hugging Face Dataset repo and local artifact root:
 
 ```bash
-export TSROUTER_VLDB_HF_REPO="<HF_DATASET_REPO>"
+export TSROUTER_VLDB_HF_REPO="LAMDA-shihn/tsrouter-v1-artifacts"
 export TSROUTER_VLDB_ARTIFACT_ROOT="/path/to/TSRouter-VLDB"
 ```
 
-Replace `<HF_DATASET_REPO>` with the released Hugging Face Dataset repository. If artifact bundles are already present under `TSRouter-VLDB/`, the repository variable is not required.
+If artifact bundles are already present under `TSRouter-VLDB/`, the repository variable is not required.
 
 Inspect the required bundles:
 
@@ -77,6 +77,8 @@ bash TSRouter-VLDB/scripts/run_public_reproduction.sh \
 
 If the artifact bundles are not already present under `TSRouter-VLDB/`, add `--pull --repo-id "$TSROUTER_VLDB_HF_REPO"`.
 The script writes full JSON logs to `TSRouter-VLDB/reproduction_logs/` and prints a concise workflow summary plus released table previews.
+
+Artifact repository: https://huggingface.co/datasets/LAMDA-shihn/tsrouter-v1-artifacts
 
 Fast artifact-backed reproduction:
 

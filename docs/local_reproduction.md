@@ -23,7 +23,7 @@ python TSRouter-VLDB/src/cli/tsrouter_vldb.py --version
 
 ```bash
 export TSROUTER_VLDB_ARTIFACT_ROOT="$PWD/TSRouter-VLDB"
-export TSROUTER_VLDB_HF_REPO="<HF_DATASET_REPO>"
+export TSROUTER_VLDB_HF_REPO="LAMDA-shihn/tsrouter-v1-artifacts"
 ```
 
 新目录中的关键路径：
