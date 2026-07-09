@@ -302,6 +302,7 @@ def write_dataset_readme(path: Path, repo_id: str, manifest: dict[str, Any]) -> 
             "",
             "## Integrity Files",
             "",
+            "- `LICENSE`: custom artifact terms for this reproduction bundle.",
             "- `manifest.json`: bundle metadata, source mode, sizes, checksums, and expected contents.",
             "- `checksums.sha256`: SHA-256 checksums for each bundle and the manifest.",
             "",
@@ -322,6 +323,24 @@ def write_dataset_readme(path: Path, repo_id: str, manifest: dict[str, Any]) -> 
         ]
     )
     path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def write_dataset_license(path: Path) -> None:
+    lines = [
+        "TSRouter-VLDB Artifact Terms",
+        "",
+        "This repository contains artifact bundles released for academic review and reproducibility of the TSRouter-VLDB paper.",
+        "The bundles may include derived experiment results, caches, metadata, and profile-source files used by the public reproduction scripts.",
+        "",
+        "This repository does not grant rights beyond those permitted by the upstream datasets, model checkpoints, software packages, or other third-party components from which any included artifact may be derived.",
+        "Users are responsible for complying with all applicable upstream licenses, terms of use, and citation requirements.",
+        "",
+        "The artifact bundles are provided to support research evaluation, paper reproducibility, and result verification.",
+        "Redistribution of this artifact repository for those purposes should preserve this license file, the dataset card, the manifest, and the checksum file.",
+        "",
+        "The artifacts are provided as is, without warranty of any kind.",
+    ]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def parse_args() -> argparse.Namespace:
@@ -385,6 +404,7 @@ def main() -> int:
     checksum_lines.append(f"{manifest_digest}  manifest.json")
     (out_dir / "checksums.sha256").write_text("\n".join(checksum_lines) + "\n", encoding="utf-8")
     write_dataset_readme(out_dir / "README.md", args.repo_id, manifest)
+    write_dataset_license(out_dir / "LICENSE")
     shutil.rmtree(staging_root)
     print(json.dumps({"ok": True, "out": str(out_dir), "manifest": str(manifest_path)}, indent=2, ensure_ascii=False))
     return 0
