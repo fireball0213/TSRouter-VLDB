@@ -72,7 +72,7 @@ echo "workspace root: $LEGACY_ROOT"
 echo "artifact group: $GROUP"
 echo "workflow mode: $WORKFLOW_MODE"
 
-run_step "1/7 Check release contract" "$LOG_DIR/01_release_contract.json" \
+run_step "1/6 Check release contract" "$LOG_DIR/01_release_contract.json" \
   "$PYTHON_BIN" "$RELEASE_ROOT/scripts/check_release_contract.py"
 
 if [[ "$PULL_ARTIFACTS" == "true" ]]; then
@@ -80,30 +80,27 @@ if [[ "$PULL_ARTIFACTS" == "true" ]]; then
     echo "missing artifact repository: pass --repo-id or set TSROUTER_VLDB_HF_REPO" >&2
     exit 2
   fi
-  run_step "2/7 Download artifacts" "$LOG_DIR/02_artifacts_pull.json" \
+  run_step "2/6 Download artifacts" "$LOG_DIR/02_artifacts_pull.json" \
     "${CLI[@]}" artifacts pull --group "$GROUP" --repo-id "$REPO_ID"
 else
   echo
-  echo "== 2/7 Download artifacts =="
+  echo "== 2/6 Download artifacts =="
   echo "skipped; using local artifact bundles under $RELEASE_ROOT"
 fi
 
-run_step "3/7 Check artifact archives" "$LOG_DIR/03_artifact_archives.json" \
+run_step "3/6 Check artifact archives" "$LOG_DIR/03_artifact_archives.json" \
   "${CLI[@]}" artifacts check --group "$GROUP" --skip-contents
 
-run_step "4/7 Extract artifacts" "$LOG_DIR/04_artifact_extract.json" \
+run_step "4/6 Extract artifacts" "$LOG_DIR/04_artifact_extract.json" \
   "${CLI[@]}" artifacts extract --group "$GROUP"
 
-run_step "5/7 Check extracted artifacts" "$LOG_DIR/05_artifact_contents.json" \
+run_step "5/6 Check extracted artifacts" "$LOG_DIR/05_artifact_contents.json" \
   "${CLI[@]}" artifacts check --group "$GROUP" --skip-archives
 
-run_step "6/7 Prepare backend paths" "$LOG_DIR/06_prepare_backend.json" \
-  "${CLI[@]}" artifacts prepare-backend --group "$GROUP" --legacy-root "$LEGACY_ROOT" --mode symlink --apply
-
-WORKFLOW_LOG="$LOG_DIR/07_workflow_${WORKFLOW_MODE}.json"
-run_step "7/7 Run workflow" "$WORKFLOW_LOG" \
+WORKFLOW_LOG="$LOG_DIR/06_workflow_${WORKFLOW_MODE}.json"
+run_step "6/6 Run workflow" "$WORKFLOW_LOG" \
   "${CLI[@]}" workflow run --mode "$WORKFLOW_MODE" --reuse all --legacy-root "$LEGACY_ROOT" --python-bin "$PYTHON_BIN" --execute
 
 "$PYTHON_BIN" "$RELEASE_ROOT/scripts/summarize_public_reproduction.py" \
   --workflow-json "$WORKFLOW_LOG" \
-  --tables-dir "$LEGACY_ROOT/results_csv/TSRouter/vldb/tables"
+  --tables-dir "$RELEASE_ROOT/artifacts/tables_figures/results_csv/TSRouter/vldb/tables"

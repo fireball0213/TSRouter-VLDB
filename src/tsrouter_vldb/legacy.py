@@ -457,7 +457,7 @@ def _insert_commands(
                 "insert_stage_start": start,
                 "insert_stage_end": end,
                 "insert_timing_csv": "results_csv/TSRouter/Model_zoo_repr/step3_insert_timing.csv",
-                "insert_source": "cli.run_model_zoo Step3 capability-index refresh",
+                "insert_source": "cli.run_model_zoo capability-index refresh",
                 "variant": variant,
             }
         )

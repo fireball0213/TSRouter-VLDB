@@ -5,13 +5,6 @@ default_revision: "main"
 local_artifact_root_env: "TSROUTER_VLDB_ARTIFACT_ROOT"
 hf_repo_env: "TSROUTER_VLDB_HF_REPO"
 
-excluded_public_artifacts:
-  - "results_artifacts/caches/GE_test_sample/cl512_n1_std_wseven_ss2025.*"
-  - "results_artifacts/caches/GE_test_sample/cl512_n10_std_wseven_ss2025.*"
-  - "*ablation*"
-  - "*min_task1_v2*"
-  - "*min_task10_v2*"
-
 groups:
   all:
     description: "All public reproduction artifacts."
@@ -48,431 +41,49 @@ bundles:
     filename: "bundles/profile_sources_v1.tar.zst"
     required: true
     extract_to: "."
-    staging_root: "."
     contents:
       - "data/profile_sources/chronos/"
       - "data/profile_sources/moirai_timesfm/"
-    required_paths:
-      - "data/profile_sources/chronos/chronos_profile_source.tsf"
-      - "data/profile_sources/moirai_timesfm/domain_energy.npy"
-      - "data/profile_sources/moirai_timesfm/domain_nature.npy"
-      - "data/profile_sources/moirai_timesfm/domain_healthcare.npy"
-      - "data/profile_sources/moirai_timesfm/domain_web_cloudops.npy"
-      - "data/profile_sources/moirai_timesfm/domain_sales.npy"
-    backend_mounts:
-      - source: "data/profile_sources/chronos/chronos_profile_source.tsf"
-        target: "Dataset/Repr_data_sourse/c62.tsf"
-      - source: "data/profile_sources/moirai_timesfm/domain_energy.npy"
-        target: "Dataset/Repr_data_sourse/energy_num1w_len992_sd2029_std.npy"
-      - source: "data/profile_sources/moirai_timesfm/domain_nature.npy"
-        target: "Dataset/Repr_data_sourse/nature_num1w_len992_sd2029_std.npy"
-      - source: "data/profile_sources/moirai_timesfm/domain_healthcare.npy"
-        target: "Dataset/Repr_data_sourse/healthcare_num1w_len992_sd2029_std.npy"
-      - source: "data/profile_sources/moirai_timesfm/domain_web_cloudops.npy"
-        target: "Dataset/Repr_data_sourse/web_cloudops_num1w_len992_sd2029_std.npy"
-      - source: "data/profile_sources/moirai_timesfm/domain_sales.npy"
-        target: "Dataset/Repr_data_sourse/sales_num1w_len992_sd2029_std.npy"
-    legacy_sources:
-      - "Dataset/Repr_data_sourse/c62.tsf"
-      - "Dataset/Repr_data_sourse/energy_num1w_len992_sd2029_std.npy"
-      - "Dataset/Repr_data_sourse/nature_num1w_len992_sd2029_std.npy"
-      - "Dataset/Repr_data_sourse/healthcare_num1w_len992_sd2029_std.npy"
-      - "Dataset/Repr_data_sourse/web_cloudops_num1w_len992_sd2029_std.npy"
-      - "Dataset/Repr_data_sourse/sales_num1w_len992_sd2029_std.npy"
 
   tsfm_results_stage20:
     filename: "bundles/stage20_tsfm_results_v1.tar.zst"
     required: true
     extract_to: "."
-    staging_root: "artifacts/tsfm_results"
     contents:
       - "artifacts/tsfm_results/results_csv/TSFM/cl_512/"
-    required_paths:
-      - "artifacts/tsfm_results/results_csv/TSFM/cl_512/*/all_results.csv"
-      - "artifacts/tsfm_results/results_csv/TSFM/cl_512/*/per_window_results.csv"
-    backend_mounts:
-      - source: "artifacts/tsfm_results/results_csv/TSFM/cl_512"
-        target: "results_csv/TSFM/cl_512"
-    legacy_sources:
-      - pattern: "results_csv/TSFM/cl_512/"
-        required: true
-        base_path: "results_csv/TSFM"
-        release_path: "artifacts/tsfm_results/results_csv/TSFM"
-        exclude_patterns:
-          - "*.lock"
 
   tsrouter_core_stage20:
     filename: "bundles/stage20_tsrouter_core_v1.tar.zst"
     required: true
     extract_to: "."
-    staging_root: "artifacts/tsrouter_core"
     contents:
       - "artifacts/tsrouter_core/results_artifacts/TSRouter/"
       - "artifacts/tsrouter_core/results_artifacts/caches/Sampled_repr_pool/"
       - "artifacts/tsrouter_core/results_csv/TSRouter/"
-    required_paths:
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Sampled_repr_anchor/StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Sampled_repr_anchor/StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_meta.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/caches/Sampled_repr_pool/c-e-n-h-w-s_x3000_in512_pl480_std_sd2029_awsfirst_pool.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/caches/Sampled_repr_pool/c-e-n-h-w-s_x3000_in512_pl480_std_sd2029_awsfirst_pool_meta.pkl"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Repr_forward/StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025_all_results.csv"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Repr_forward/StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025_per_sample_results.csv"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Repr_forward/c-e-n-h-w-s_x3000_in512_pl480_std_sd2029_awsfirst_pool_sf2025_all_results.csv"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Repr_forward/c-e-n-h-w-s_x3000_in512_pl480_std_sd2029_awsfirst_pool_sf2025_per_sample_results.csv"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/weight_zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_subset_assign.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_model_manifest.json"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/weight_zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_rfast.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_rfast.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_rfast_subset_assign.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_rfast_model_manifest.json"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/weight_zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4M_repr-all_sub0_1.0.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4M_repr-all_sub0_1.0.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4M_repr-all_sub0_1.0_subset_assign.pkl"
-      - "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4M_repr-all_sub0_1.0_model_manifest.json"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Model_zoo_repr/step3_insert_timing.csv"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Selector_results/stage20/*sf2025-v4C*_w0.5_min_task20_v2_wseven_ss2025_top1-median_res1_all_results.csv"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Selector_results/stage20/*sf2025-v4C*_rfast_w0.5_min_task20_v2_wseven_ss2025_top1-median_res1_all_results.csv"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Selector_results/stage20/*sf2025-v7C*_afgbdt_w0.5_min_task20_v2_wseven_ss2025_top1-median_res1_all_results.csv"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Selector_results/stage20/*sf2025-v7C*_rfast_afgbdt_w0.5_min_task20_v2_wseven_ss2025_top1-median_res1_all_results.csv"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Selector_results/stage20/*sf2025-v6C*_w0.5_min_task20_v2_wseven_ss2025_top1-median_res1_all_results.csv"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Selector_results/stage20/*sf2025-v4M*_w0.5_min_task20_v2_wseven_fb0_ss2025_top1-median_res1_all_results.csv"
-      - "artifacts/tsrouter_core/results_csv/TSRouter/Selector_results/stage20/*sf2025-v4C*_w0.5_min_task20_v2_wseven_fb0_ss2025_top1-median_res1_all_results.csv"
-    backend_mounts:
-      - source: "artifacts/tsrouter_core/results_artifacts/TSRouter/Sampled_repr_anchor"
-        target: "results_artifacts/TSRouter/Sampled_repr_anchor"
-      - source: "artifacts/tsrouter_core/results_artifacts/caches/Sampled_repr_pool"
-        target: "results_artifacts/caches/Sampled_repr_pool"
-      - source: "artifacts/tsrouter_core/results_artifacts/TSRouter/Model_zoo_repr"
-        target: "results_artifacts/TSRouter/Model_zoo_repr"
-        required: false
-      - source: "artifacts/tsrouter_core/results_csv/TSRouter/Repr_forward"
-        target: "results_csv/TSRouter/Repr_forward"
-      - source: "artifacts/tsrouter_core/results_csv/TSRouter/Model_zoo_repr"
-        target: "results_csv/TSRouter/Model_zoo_repr"
-        required: false
-      - source: "artifacts/tsrouter_core/results_csv/TSRouter/Selector_results"
-        target: "results_csv/TSRouter/Selector_results"
-    legacy_sources:
-      - pattern: "results_artifacts/TSRouter/Sampled_repr_anchor/StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n.pkl"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Sampled_repr_anchor/StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_meta.pkl"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/caches/Sampled_repr_pool/c-e-n-h-w-s_x3000_in512_pl480_std_sd2029_awsfirst_pool.pkl"
-        required: true
-        base_path: "results_artifacts/caches"
-        release_path: "artifacts/tsrouter_core/results_artifacts/caches"
-      - pattern: "results_artifacts/caches/Sampled_repr_pool/c-e-n-h-w-s_x3000_in512_pl480_std_sd2029_awsfirst_pool_meta.pkl"
-        required: true
-        base_path: "results_artifacts/caches"
-        release_path: "artifacts/tsrouter_core/results_artifacts/caches"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/weight_zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0.pkl"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0.pkl"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_subset_assign.pkl"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_model_manifest.json"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/weight_zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_rfast.pkl"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_rfast.pkl"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_rfast_subset_assign.pkl"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_rfast_model_manifest.json"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/weight_zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4M_repr-all_sub0_1.0.pkl"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4M_repr-all_sub0_1.0.pkl"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4M_repr-all_sub0_1.0_subset_assign.pkl"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_artifacts/TSRouter/Model_zoo_repr/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4M_repr-all_sub0_1.0_model_manifest.json"
-        required: true
-        base_path: "results_artifacts/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_artifacts/TSRouter"
-      - pattern: "results_csv/TSRouter/Repr_forward/StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025_*results.csv"
-        required: true
-        base_path: "results_csv/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_csv/TSRouter"
-      - pattern: "results_csv/TSRouter/Repr_forward/c-e-n-h-w-s_x3000_in512_pl480_std_sd2029_awsfirst_pool_sf2025_*results.csv"
-        required: true
-        base_path: "results_csv/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_csv/TSRouter"
-      - pattern: "results_csv/TSRouter/Model_zoo_repr/"
-        required: false
-        base_path: "results_csv/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_csv/TSRouter"
-        include_patterns:
-          - "*encoder_enrichment*.csv"
-          - "*step3_insert_timing.csv"
-        exclude_patterns:
-          - "*.lock"
-      - pattern: "results_csv/TSRouter/Selector_results/stage*/"
-        required: true
-        base_path: "results_csv/TSRouter"
-        release_path: "artifacts/tsrouter_core/results_csv/TSRouter"
-        include_patterns:
-          - "results_csv/TSRouter/Selector_results/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_w0.5_min_task20_v2_wseven_ss2025_top1-median_res1_all_results.csv"
-          - "results_csv/TSRouter/Selector_results/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_rfast_w0.5_min_task20_v2_wseven_ss2025_top1-median_res1_all_results.csv"
-          - "results_csv/TSRouter/Selector_results/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_afgbdt_w0.5_min_task20_v2_wseven_ss2025_top1-median_res1_all_results.csv"
-          - "results_csv/TSRouter/Selector_results/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_rfast_afgbdt_w0.5_min_task20_v2_wseven_ss2025_top1-median_res1_all_results.csv"
-          - "results_csv/TSRouter/Selector_results/stage20/zoo20-20_TS2Vec_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v6C_repr-all_sub0_1.0_w0.5_min_task20_v2_wseven_ss2025_top1-median_res1_all_results.csv"
-          - "results_csv/TSRouter/Selector_results/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4M_repr-all_sub0_1.0_w0.5_min_task20_v2_wseven_fb0_ss2025_top1-median_res1_all_results.csv"
-          - "results_csv/TSRouter/Selector_results/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v4C_repr-all_sub0_1.0_w0.5_min_task20_v2_wseven_fb0_ss2025_top1-median_res1_all_results.csv"
-        exclude_patterns:
-          - "*.lock"
 
   baselines_stage20:
     filename: "bundles/stage20_baselines_v1.tar.zst"
     required: true
     extract_to: "."
-    staging_root: "artifacts/baseline_results"
     contents:
       - "artifacts/baseline_results/results_artifacts/baselines/selectors/"
       - "artifacts/baseline_results/results_csv/baselines/"
-    required_paths:
-      - "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoForecast_Select/stage20/weight_zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_afgbdt.pkl"
-      - "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoForecast_Select/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_afgbdt.pkl"
-      - "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoForecast_Select/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_afgbdt_model_manifest.json"
-      - "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoXPCR_Select/stage20/weight_zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_rfast_afgbdt.pkl"
-      - "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoXPCR_Select/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_rfast_afgbdt.pkl"
-      - "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoXPCR_Select/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_rfast_afgbdt_model_manifest.json"
-      - "artifacts/baseline_results/results_artifacts/baselines/selectors/SimpleTS_Select/stage20/weight_zoo20-20_TS2Vec_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v6C_repr-all_sub0_1.0.pkl"
-      - "artifacts/baseline_results/results_artifacts/baselines/selectors/SimpleTS_Select/stage20/zoo20-20_TS2Vec_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v6C_repr-all_sub0_1.0.pkl"
-      - "artifacts/baseline_results/results_artifacts/baselines/selectors/SimpleTS_Select/stage20/zoo20-20_TS2Vec_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v6C_repr-all_sub0_1.0_model_manifest.json"
-      - "artifacts/baseline_results/results_csv/baselines/selectors/Task_probe_Select/rank_summary.csv"
-      - "artifacts/baseline_results/results_csv/baselines/selectors/Task_probe_Select/forward_summary.csv"
-      - "artifacts/baseline_results/results_csv/baselines/selectors/AutoForecast_Select/step3_insert_timing.csv"
-      - "artifacts/baseline_results/results_csv/baselines/selectors/AutoXPCR_Select/step3_insert_timing.csv"
-      - "artifacts/baseline_results/results_csv/baselines/selectors/SimpleTS_Select/step3_insert_timing.csv"
-    backend_mounts:
-      - source: "artifacts/baseline_results/results_artifacts/baselines/selectors"
-        target: "results_artifacts/baselines/selectors"
-      - source: "artifacts/baseline_results/results_csv/baselines/vldb"
-        target: "results_csv/baselines/vldb"
-        required: false
-      - source: "artifacts/baseline_results/results_csv/baselines/selectors"
-        target: "results_csv/baselines/selectors"
-      - source: "artifacts/baseline_results/results_csv/TSRouter/vldb/logs"
-        target: "results_csv/TSRouter/vldb/logs"
-        required: false
-    legacy_sources:
-      - source_id: "autoforecast_step3_weight"
-        pattern: "results_artifacts/baselines/selectors/AutoForecast_Select/stage20/weight_zoo20-23_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_afgbdt.pkl"
-        required: true
-        release_path: "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoForecast_Select/stage20/weight_zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_afgbdt.pkl"
-      - source_id: "autoforecast_step3_model_repr"
-        pattern: "results_artifacts/baselines/selectors/AutoForecast_Select/stage20/zoo20-23_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_afgbdt.pkl"
-        required: true
-        release_path: "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoForecast_Select/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_afgbdt.pkl"
-      - source_id: "autoforecast_step3_manifest"
-        pattern: "results_artifacts/baselines/selectors/AutoForecast_Select/stage20/zoo20-23_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_afgbdt_model_manifest.json"
-        required: true
-        release_path: "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoForecast_Select/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_afgbdt_model_manifest.json"
-      - source_id: "autoxpcr_step3_weight"
-        pattern: "results_artifacts/baselines/selectors/AutoXPCR_Select/stage20/weight_zoo20-23_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_rfast_afgbdt.pkl"
-        required: true
-        release_path: "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoXPCR_Select/stage20/weight_zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_rfast_afgbdt.pkl"
-      - source_id: "autoxpcr_step3_model_repr"
-        pattern: "results_artifacts/baselines/selectors/AutoXPCR_Select/stage20/zoo20-23_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_rfast_afgbdt.pkl"
-        required: true
-        release_path: "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoXPCR_Select/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_rfast_afgbdt.pkl"
-      - source_id: "autoxpcr_step3_manifest"
-        pattern: "results_artifacts/baselines/selectors/AutoXPCR_Select/stage20/zoo20-23_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_rfast_afgbdt_model_manifest.json"
-        required: true
-        release_path: "artifacts/baseline_results/results_artifacts/baselines/selectors/AutoXPCR_Select/stage20/zoo20-20_StatsRandomFourier_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v7C_repr-all_sub0_1.0_rfast_afgbdt_model_manifest.json"
-      - source_id: "simplets_step3_weight"
-        pattern: "results_artifacts/baselines/selectors/SimpleTS_Select/stage20/weight_zoo20-23_TS2Vec_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v6C_repr-all_sub0_1.0.pkl"
-        required: true
-        release_path: "artifacts/baseline_results/results_artifacts/baselines/selectors/SimpleTS_Select/stage20/weight_zoo20-20_TS2Vec_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v6C_repr-all_sub0_1.0.pkl"
-      - source_id: "simplets_step3_model_repr"
-        pattern: "results_artifacts/baselines/selectors/SimpleTS_Select/stage20/zoo20-23_TS2Vec_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v6C_repr-all_sub0_1.0.pkl"
-        required: true
-        release_path: "artifacts/baseline_results/results_artifacts/baselines/selectors/SimpleTS_Select/stage20/zoo20-20_TS2Vec_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v6C_repr-all_sub0_1.0.pkl"
-      - source_id: "simplets_step3_manifest"
-        pattern: "results_artifacts/baselines/selectors/SimpleTS_Select/stage20/zoo20-23_TS2Vec_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v6C_repr-all_sub0_1.0_model_manifest.json"
-        required: true
-        release_path: "artifacts/baseline_results/results_artifacts/baselines/selectors/SimpleTS_Select/stage20/zoo20-20_TS2Vec_512to256_pl480_std_sd2029_se2025_c-e-n-h-w-s_x3000_awsfirst_kmeans-n_sf2025-v6C_repr-all_sub0_1.0_model_manifest.json"
-      - pattern: "results_csv/baselines/vldb/"
-        required: false
-        base_path: "results_csv/baselines"
-        release_path: "artifacts/baseline_results/results_csv/baselines"
-        include_patterns:
-          - "results_csv/baselines/vldb/Static_Best/zoo20-20_static_best_all_results.csv"
-          - "results_csv/baselines/vldb/Task_Oracle_Best/zoo20-20_task_oracle_best*_all_results.csv"
-          - "results_csv/baselines/vldb/MetaFeature_GBDT/zoo20-20_metafeature_gbdt_all_results.csv"
-          - "results_csv/baselines/vldb/MetaFeature_MLP/zoo20-20_metafeature_mlp_all_results.csv"
-        exclude_patterns:
-          - "*.lock"
-      - pattern: "results_csv/baselines/selectors/Task_probe_Select/"
-        required: true
-        base_path: "results_csv/baselines"
-        release_path: "artifacts/baseline_results/results_csv/baselines"
-        include_patterns:
-          - "rank_summary.csv"
-          - "forward_summary.csv"
-          - "*.manifest.json"
-        exclude_patterns:
-          - "*.lock"
-      - pattern: "results_csv/baselines/selectors/AutoForecast_Select/step3_insert_timing.csv"
-        required: true
-        base_path: "results_csv/baselines"
-        release_path: "artifacts/baseline_results/results_csv/baselines"
-      - pattern: "results_csv/baselines/selectors/AutoXPCR_Select/step3_insert_timing.csv"
-        required: true
-        base_path: "results_csv/baselines"
-        release_path: "artifacts/baseline_results/results_csv/baselines"
-      - pattern: "results_csv/baselines/selectors/SimpleTS_Select/step3_insert_timing.csv"
-        required: true
-        base_path: "results_csv/baselines"
-        release_path: "artifacts/baseline_results/results_csv/baselines"
-      - pattern: "results_csv/baselines/selectors/Rank_Truth_Select/"
-        required: false
-        base_path: "results_csv/baselines"
-        release_path: "artifacts/baseline_results/results_csv/baselines"
-        include_patterns:
-          - "zoo20-20_rank_truth_*.csv"
-        exclude_patterns:
-          - "*.lock"
-      - pattern: "results_csv/TSRouter/vldb/logs/"
-        required: false
-        base_path: "results_csv/TSRouter/vldb"
-        release_path: "artifacts/baseline_results/results_csv/TSRouter/vldb"
-        include_patterns:
-          - "*route_latency_log.csv"
-          - "*baseline_insert_log.csv"
-          - "*task_probe_sample_forward_log.csv"
-          - "*task_probe_sample_error_log.csv"
-          - "*baseline_forward_detail_log.csv"
-          - "*manifest*.csv"
-        exclude_patterns:
-          - "*.lock"
 
   task_cache_stage20:
     filename: "bundles/stage20_task_cache_v1.tar.zst"
     required: true
     extract_to: "."
-    staging_root: "artifacts/task_sample_cache"
     contents:
       - "artifacts/task_sample_cache/results_artifacts/caches/GE_test_sample/"
-    required_paths:
-      - "artifacts/task_sample_cache/results_artifacts/caches/GE_test_sample/cl512_n20_std_wseven_ss2025.pkl"
-      - "artifacts/task_sample_cache/results_artifacts/caches/GE_test_sample/cl512_n20_std_wseven_ss2025.pkl.meta.json"
-    backend_mounts:
-      - source: "artifacts/task_sample_cache/results_artifacts/caches/GE_test_sample"
-        target: "results_artifacts/caches/GE_test_sample"
-    legacy_sources:
-      - pattern: "results_artifacts/caches/GE_test_sample/cl512_n20_std_wseven_ss2025.pkl"
-        required: true
-        base_path: "results_artifacts/caches"
-        release_path: "artifacts/task_sample_cache/results_artifacts/caches"
-      - pattern: "results_artifacts/caches/GE_test_sample/cl512_n20_std_wseven_ss2025.pkl.meta.json"
-        required: true
-        base_path: "results_artifacts/caches"
-        release_path: "artifacts/task_sample_cache/results_artifacts/caches"
 
   tables_figures_stage20:
     filename: "bundles/stage20_tables_figures_v1.tar.zst"
     required: true
     extract_to: "."
-    staging_root: "artifacts/tables_figures"
     contents:
       - "artifacts/tables_figures/Dataset/"
       - "artifacts/tables_figures/results_csv/TSRouter/vldb/"
       - "artifacts/tables_figures/figs/vldb_results/stage20/"
-    required_paths:
-      - "artifacts/tables_figures/Dataset/channel_meta.csv"
-      - "artifacts/tables_figures/Dataset/channel_meta_with_real_rank.csv"
-      - "artifacts/tables_figures/Dataset/dataset_properties.json"
-      - "artifacts/tables_figures/results_csv/TSRouter/vldb/tables/vldb_results_table1_latest_stage.csv"
-      - "artifacts/tables_figures/results_csv/TSRouter/vldb/tables/vldb_results_table2_mase_by_stage.csv"
-      - "artifacts/tables_figures/results_csv/TSRouter/vldb/tables/vldb_results_table2_crps_by_stage.csv"
-      - "artifacts/tables_figures/results_csv/TSRouter/vldb/tables/vldb_results_table3_insert_breakdown_by_stage.csv"
-      - "artifacts/tables_figures/results_csv/TSRouter/vldb/tables/vldb_results_table4_route_breakdown_by_stage.csv"
-      - "artifacts/tables_figures/results_csv/TSRouter/vldb/tables/vldb_results_table5_combined_overhead_by_stage.csv"
-      - "artifacts/tables_figures/results_csv/TSRouter/vldb/tables/vldb_results_table6_1_total_overhead_growth.csv"
-      - "artifacts/tables_figures/results_csv/TSRouter/vldb/tables/vldb_results_table6_2_p95_overhead_growth.csv"
-      - "artifacts/tables_figures/results_csv/TSRouter/vldb/tables/vldb_results_table6_3_figure4_p95_growth_points.csv"
-    backend_mounts:
-      - source: "artifacts/tables_figures/Dataset/channel_meta.csv"
-        target: "Dataset/channel_meta.csv"
-      - source: "artifacts/tables_figures/Dataset/channel_meta_with_real_rank.csv"
-        target: "Dataset/channel_meta_with_real_rank.csv"
-      - source: "artifacts/tables_figures/Dataset/dataset_properties.json"
-        target: "Dataset/dataset_properties.json"
-      - source: "artifacts/tables_figures/results_csv/TSRouter/vldb"
-        target: "results_csv/TSRouter/vldb"
-      - source: "artifacts/tables_figures/figs/vldb_results/stage20"
-        target: "figs/vldb_results/stage20"
-    legacy_sources:
-      - pattern: "Dataset/channel_meta.csv"
-        required: true
-      - pattern: "Dataset/channel_meta_with_real_rank.csv"
-        required: true
-      - pattern: "Dataset/dataset_properties.json"
-        required: true
-      - pattern: "results_csv/TSRouter/vldb/tables/"
-        required: true
-        base_path: "results_csv/TSRouter/vldb"
-        release_path: "artifacts/tables_figures/results_csv/TSRouter/vldb"
-        include_patterns:
-          - "vldb_results_source_check.csv"
-          - "vldb_results_table1_latest_stage*.csv"
-          - "vldb_results_table2_mase_by_stage*.csv"
-          - "vldb_results_table2_crps_by_stage*.csv"
-          - "vldb_results_table3_insert_breakdown_by_stage.csv"
-          - "vldb_results_table4_route_breakdown_by_stage.csv"
-          - "vldb_results_table5_combined_overhead_by_stage.csv"
-          - "vldb_results_table6_1_total_overhead_growth.csv"
-          - "vldb_results_table6_2_p95_overhead_growth.csv"
-          - "vldb_results_table6_3_figure4_p95_growth_points.csv"
-        exclude_patterns:
-          - "*.lock"
-          - "*ablation*"
-          - "*cl512_n1_std_wseven_ss2025*"
-          - "*cl512_n10_std_wseven_ss2025*"
-      - pattern: "figs/vldb_results/stage20/"
-        required: true
-        base_path: "figs/vldb_results"
-        release_path: "artifacts/tables_figures/figs/vldb_results"
-        include_patterns:
-          - "figure1_*"
-          - "figure2_*"
-          - "figure3_*"
-          - "figure_stage_overhead_growth_*"
-        exclude_patterns:
-          - "*ablation*"
-          - "*cl512_n1_std_wseven_ss2025*"
-          - "*cl512_n10_std_wseven_ss2025*"
 
 manifest:
   filename: "manifest.json"

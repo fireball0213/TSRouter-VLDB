@@ -4,7 +4,7 @@ TSRouter-VLDB provides the public reproduction interface for TSRouter and TSFM-Z
 
 Large artifacts are distributed through a Hugging Face Dataset. GitHub contains source code, small configuration files, scripts, and integrity checks.
 
-The first artifact release focuses on the stage-20 main experiment, TSRouter-main, TSRouter-fast, and paper baseline results. Ablation caches and ablation result files are outside this artifact bundle.
+The artifact release provides the main-paper reproduction bundles for TSRouter-main, TSRouter-fast, and paper baselines.
 
 ## Artifact Setup
 
@@ -35,12 +35,12 @@ Check the local release layout:
 python TSRouter-VLDB/src/cli/tsrouter_vldb.py check layout
 ```
 
-Check extracted artifacts and prepare backend-readable paths:
+Check and extract the local artifact bundles:
 
 ```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts check --group core
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts prepare-backend --group core
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts prepare-backend --group core --apply
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts check --group core --skip-contents
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts extract --group core
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts check --group core --skip-archives
 ```
 
 Check that the release execution contract matches the paper main grid and command plans:
@@ -95,4 +95,3 @@ python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run --mode full --reuse a
 ```
 
 The artifact layout is defined in `configs/artifact_layout.yaml`.
-The backend execution contract is defined in `configs/legacy_run_contract.yaml`.
