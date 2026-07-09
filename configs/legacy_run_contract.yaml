@@ -1,83 +1,5 @@
-# TSRouter-VLDB execution contract.
-# This file keeps the release command layer aligned with the existing backend
-# entry points while exposing only paper-facing command names.
+# TSRouter-VLDB public execution contract.
 schema_version: 1
-
-source_files:
-  paper_main_grid: "src/cli/vldb_fast_baselines.py::VLDB_RESULTS_MAIN_PARAM_GRID"
-  route_backend: "src/cli/run_model_zoo.py"
-  insert_timing_backend: "src/cli/run_model_zoo.py::save_model_zoo_repr"
-  selector_baseline_backend: "src/cli/run_model_zoo.py + src/selector/baselines/baseline_select.py"
-  task_probe_backend: "src/cli/run_model_zoo.py + src/selector/TSRouter_Select/task_probe_select.py"
-  advanced_baseline_backend: "src/selector/TSRouter_Select/{autoforecast_select.py,simplets_select.py,model_zoo_repr.py}"
-  summary_backend: "src/cli/check_selector.py"
-  table_backend: "src/cli/vldb_fast_baselines.py"
-
-paper_main_execution:
-  description: "Paper-facing TSRouter-main execution profile. This is the release source of truth."
-  python_module: "cli.run_model_zoo"
-  gpu: 0
-  random_times: 1
-  start_seed: 2025
-  start_step: 1
-  encoder_type: "StatsRandom"
-  encoder_structure: "Fourier"
-  train_encoder_epochs: 100
-  fixed_context_len: 512
-  repr_input_dim: 512
-  repr_output_dim: 256
-  repr_sub_pred_len: 480
-  tsfm_results_dir: "cl_512"
-  repr_sample_qc_mode: "strict"
-  repr_scale_protocol: "standard"
-  enable_process_metrics: true
-  process_metrics_region_rule: "effective"
-  skip_step2_cluster_forward: true
-  repr_v: 4
-  ensemble_size: 1
-  ensemble_agg: "median"
-  task_sample_strategy: "latest_random"
-  sample_repr_ratio: 0.0
-  task_rank_top3_instability_threshold: -1.0
-  route_family_mode: "default"
-  sample_mode: "cluster_nearest"
-  task_channel_fuse_limit: "all"
-  repr_anchor_protocol: "window"
-  zoo_repr_set: "c-e-n-h-w-s"
-  route_efficiency_mode: false
-  mix_route: false
-  repr_data_seed: 2029
-  repr_encoder_seed: 2025
-  forward_seed: 2025
-  search_seed: 2025
-  repr_size: 3000
-  repr_anchor_window_sample_strategy: "first"
-  task_window_sample_strategy: "even"
-  base_metrics: "C"
-  repr_weight_ratio: 0.5
-  model_repr_mode: "all"
-  subset_top_k: 0
-  subset_perf_scale: 1.0
-  rank_decay_coef: 1.0
-  repr_distance_metric: "cos"
-  model_repr_agg: "min"
-  task_sample_version: 2
-  sample_repr_num: 20
-  restrict_top_model_num: 1
-  ge_fast_eval: true
-  rank_truth_cls: "cl512"
-  skip_policy:
-    profile_anchors: true
-    profile_forwards: true
-    capability_index: false
-    route: true
-
-paper_results_main:
-  description: "Paper-facing TSRouter-main profile."
-  source_config: "configs/paper_run_profiles.yaml::main_profile"
-  expected_grid_source: "src/cli/vldb_fast_baselines.py::VLDB_RESULTS_MAIN_PARAM_GRID"
-  repr_size: 3000
-  repr_v: 4
 
 variant_policy:
   main:
@@ -91,63 +13,34 @@ variant_policy:
 
 public_command_mapping:
   tsfm:
-    backend: "cli.run_model_zoo"
     purpose: "Run or validate cached TSFM zero-shot results."
     artifact_groups:
       - "tsfm_results_stage20"
   profile:
-    backend: "cli.run_model_zoo"
-    backend_operations:
-      - "profile_anchors"
-      - "profile_forwards"
-      - "capability_index"
+    purpose: "Build or validate PROFILE artifacts."
     artifact_groups:
       - "profile_sources"
       - "tsrouter_core_stage20"
   route:
-    backend: "cli.run_model_zoo"
-    backend_operations:
-      - "route_select"
-    route_id_policy:
-      primary: "cli.check_selector::_vldb_route_id_for_args"
-      compatibility_candidates:
-        - "stage{stage}_main_route"
+    purpose: "Run or validate TSRouter-main and TSRouter-fast results."
     artifact_groups:
       - "tsfm_results_stage20"
       - "tsrouter_core_stage20"
       - "task_cache_stage20"
   insert:
-    backend: "cli.run_model_zoo"
-    backend_operations:
-      - "capability_index_refresh"
-      - "step3_insert_timing"
-    timing_csv:
-      - "results_csv/TSRouter/Model_zoo_repr/step3_insert_timing.csv"
-      - "results_csv/baselines/selectors/AutoForecast_Select/step3_insert_timing.csv"
-      - "results_csv/baselines/selectors/AutoXPCR_Select/step3_insert_timing.csv"
-      - "results_csv/baselines/selectors/SimpleTS_Select/step3_insert_timing.csv"
+    purpose: "Run or validate route-index maintenance summaries."
     artifact_groups:
       - "tsrouter_core_stage20"
       - "baselines_stage20"
   baselines:
-    backend: "cli.run_model_zoo"
-    backend_operations:
-      - "route_style_baseline_results"
-      - "task_probe_mix_route"
-      - "selector_static_baselines"
-    table_inputs:
-      - "results_csv/TSFM/cl_512/"
-      - "results_csv/TSRouter/Selector_results/stage20/"
-      - "results_csv/baselines/selectors/"
+    purpose: "Run or validate paper baseline results."
     artifact_groups:
       - "tsfm_results_stage20"
       - "tsrouter_core_stage20"
       - "baselines_stage20"
       - "task_cache_stage20"
   summary:
-    backend: "cli.check_selector"
-    backend_operations:
-      - "vldb_results_tables"
+    purpose: "Run or validate released result tables."
     artifact_groups:
       - "tsfm_results_stage20"
       - "tsrouter_core_stage20"
@@ -156,17 +49,8 @@ public_command_mapping:
 
 public_reuse_modes:
   all:
-    description: "Use existing local or Hugging Face artifacts whenever the backend supports skip_saved."
-    skip_saved: true
+    description: "Use existing local or downloaded artifacts when available."
   none:
-    description: "Recompute the selected command group."
-    skip_saved: false
+    description: "Run the selected command group without artifact-backed skip."
   partial:
     description: "Comma-separated artifact groups; command planning reports which groups are reused."
-    skip_saved: false
-
-excluded_public_interfaces:
-  - "source_sampling"
-  - "unreported_encoder_sweeps"
-  - "unreported_model_registration"
-  - "experimental_context_length_adaptation"

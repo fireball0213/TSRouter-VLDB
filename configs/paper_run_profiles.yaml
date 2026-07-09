@@ -1,5 +1,4 @@
-# TSRouter-VLDB paper run profiles.
-# The main method profile mirrors src/cli/vldb_fast_baselines.py::VLDB_RESULTS_MAIN_PARAM_GRID.
+# TSRouter-VLDB public run profiles.
 schema_version: 1
 default_stage: 20
 
