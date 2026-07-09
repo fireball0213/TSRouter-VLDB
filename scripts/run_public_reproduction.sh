@@ -7,6 +7,7 @@ WORKSPACE_ROOT="$(cd "$RELEASE_ROOT/.." && pwd)"
 
 PYTHON_BIN="${PYTHON_BIN:-python}"
 LEGACY_ROOT="$WORKSPACE_ROOT"
+ARTIFACT_ROOT="$RELEASE_ROOT"
 GROUP="all"
 WORKFLOW_MODE="full"
 LOG_DIR="$RELEASE_ROOT/reproduction_logs"
@@ -21,6 +22,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --python-bin)
       PYTHON_BIN="$2"
+      shift 2
+      ;;
+    --artifact-root)
+      ARTIFACT_ROOT="$2"
       shift 2
       ;;
     --group)
@@ -51,6 +56,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir -p "$LOG_DIR"
+export TSROUTER_VLDB_ARTIFACT_ROOT="$ARTIFACT_ROOT"
 CLI=("$PYTHON_BIN" "$RELEASE_ROOT/src/cli/tsrouter_vldb.py")
 
 run_step() {
@@ -78,6 +84,7 @@ cd "$LEGACY_ROOT"
 echo "TSRouter-VLDB public reproduction"
 echo "release root: $RELEASE_ROOT"
 echo "workspace root: $LEGACY_ROOT"
+echo "artifact root: $ARTIFACT_ROOT"
 echo "artifact group: $GROUP"
 echo "workflow mode: $WORKFLOW_MODE"
 
@@ -112,4 +119,4 @@ run_step "6/6 Run workflow" "$WORKFLOW_LOG" \
 
 "$PYTHON_BIN" "$RELEASE_ROOT/scripts/summarize_public_reproduction.py" \
   --workflow-json "$WORKFLOW_LOG" \
-  --tables-dir "$RELEASE_ROOT/artifacts/tables_figures/results_csv/TSRouter/vldb/tables"
+  --tables-dir "$ARTIFACT_ROOT/artifacts/tables_figures/results_csv/TSRouter/vldb/tables"
