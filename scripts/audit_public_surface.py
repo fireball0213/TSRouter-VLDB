@@ -51,6 +51,9 @@ SKIP_SUFFIXES = {
     ".pdf",
 }
 
+ARCHIVE_TEXT_SUFFIXES = {".csv", ".json", ".md", ".txt", ".yaml", ".yml"}
+ARCHIVE_TEXT_MARKERS = ("/results_csv/TSRouter/vldb/tables/",)
+
 
 def git_files() -> list[Path]:
     proc = subprocess.run(
@@ -94,6 +97,31 @@ def scan_files(paths: Iterable[Path]) -> list[dict[str, object]]:
     return findings
 
 
+def should_scan_archive_member_text(member: str) -> bool:
+    normalized = member.replace("\\", "/")
+    if Path(normalized).suffix.lower() not in ARCHIVE_TEXT_SUFFIXES:
+        return False
+    return any(marker in normalized for marker in ARCHIVE_TEXT_MARKERS)
+
+
+def scan_archive_member_text(root: Path, archive: Path, member: str) -> list[dict[str, object]]:
+    proc = subprocess.run(
+        ["tar", "--zstd", "-xOf", str(archive), member],
+        check=False,
+        capture_output=True,
+    )
+    rel = f"{archive.relative_to(root).as_posix()}::{member}"
+    if proc.returncode != 0:
+        return [{"file": rel, "line": 0, "rule": "archive-member-read-error"}]
+    text = proc.stdout.decode("utf-8", errors="replace")
+    findings = []
+    for line_no, line in enumerate(text.splitlines(), start=1):
+        for name, pattern in TEXT_RULES:
+            if _matches(pattern, line):
+                findings.append({"file": rel, "line": line_no, "rule": name})
+    return findings
+
+
 def scan_archives(root: Path) -> list[dict[str, object]]:
     findings = []
     for archive in sorted((root / "bundles").glob("*.tar.zst")):
@@ -111,6 +139,8 @@ def scan_archives(root: Path) -> list[dict[str, object]]:
                 if _matches(pattern, member):
                     findings.append({"file": archive.relative_to(root).as_posix(), "line": 0, "rule": name})
                     break
+            if should_scan_archive_member_text(member):
+                findings.extend(scan_archive_member_text(root, archive, member))
     return findings
 
 

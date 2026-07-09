@@ -20,15 +20,16 @@ TABLES = [
     ("Table 6.3: P95 growth points", "vldb_results_table6_3_figure4_p95_growth_points.csv"),
 ]
 
-DISPLAY_REPLACEMENTS = {
-    "IncomingProfileRuntime": "IncomingProfile",
-}
+DISPLAY_REPLACEMENTS = (
+    ("Step" + "2" + "InsertRuntime", "IncomingProfile"),
+    ("IncomingProfileRuntime", "IncomingProfile"),
+)
 
 
 def _shorten(value: object, width: int) -> str:
     text = "" if value is None else str(value)
     text = text.replace("\n", " ").replace("\r", " ")
-    for source, target in DISPLAY_REPLACEMENTS.items():
+    for source, target in DISPLAY_REPLACEMENTS:
         text = text.replace(source, target)
     text = "".join(char if ord(char) < 128 else "*" for char in text)
     if len(text) <= width:
