@@ -3,7 +3,8 @@ schema_version: 1
 paper_source: "VLDB paper"
 
 artifact_commitment:
-  reproduce_main_tables: true
+  artifact_backed_main_tables: true
+  full_workspace_main_tables: false
   reproduce_all_figures: false
   publish_generated_figures: true
   publish_figure_sources: true
@@ -35,14 +36,14 @@ tables:
     artifact_inputs:
       - "artifacts/tsfm_results/"
       - "configs/model_registry.yaml"
-    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table model-zoo --stage 20 --write"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table model-zoo --stage 20 --reuse all --write"
 
   - id: "baseline_fairness_table"
     required: true
     artifact_inputs:
       - "configs/paper_run_profiles.yaml"
       - "artifacts/baseline_results/"
-    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table baseline-fairness --stage 20 --write"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table baseline-fairness --stage 20 --reuse all --write"
 
   - id: "main_quality_efficiency_table"
     required: true
@@ -51,7 +52,7 @@ tables:
       - "artifacts/tsrouter_core/"
       - "artifacts/baseline_results/"
       - "artifacts/task_sample_cache/"
-    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table main-quality-efficiency --stage 20 --write"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table main-quality-efficiency --stage 20 --reuse all --write"
 
   - id: "overhead_breakdown_table"
     required: true
@@ -59,21 +60,21 @@ tables:
       - "artifacts/tsrouter_core/"
       - "artifacts/baseline_results/"
       - "artifacts/tsfm_results/"
-    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table overhead-breakdown --stage 20 --write"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table overhead-breakdown --stage 20 --reuse all --write"
 
   - id: "growth_overhead_table"
     required: true
     artifact_inputs:
       - "artifacts/tsrouter_core/"
       - "artifacts/baseline_results/"
-    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table growth-overhead --stage 20 --write"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table growth-overhead --stage 20 --reuse all --write"
 
   - id: "profile_route_diagnostic_table"
     required: true
     artifact_inputs:
       - "artifacts/tsrouter_core/"
       - "artifacts/task_sample_cache/"
-    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table profile-route-diagnostics --stage 20 --write"
+    public_script_target: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --table profile-route-diagnostics --stage 20 --reuse all --write"
 
 figures:
   policy: "publish_generated_figures_and_source_csv; plotting_scripts_optional"
@@ -83,4 +84,4 @@ figures:
     - "figs/vldb_results/stage20/"
 
 validation:
-  required_command: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary check --stage 20"
+  required_command: "python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --stage 20 --reuse all --write"

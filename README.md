@@ -64,7 +64,7 @@ python TSRouter-VLDB/src/cli/tsrouter_vldb.py profile run --stage 20 --variant m
 python TSRouter-VLDB/src/cli/tsrouter_vldb.py route run --stage 20 --variant main,fast --reuse all
 python TSRouter-VLDB/src/cli/tsrouter_vldb.py insert run-all --start-stage 3 --end-stage 20 --variant main,fast --reuse all
 python TSRouter-VLDB/src/cli/tsrouter_vldb.py baselines run --stage 20 --methods all --reuse all
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --stage 20 --write
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --stage 20 --reuse all --write
 ```
 
 Commands print a compact operation plan by default. Add `--execute` to run the selected group.
@@ -74,6 +74,8 @@ Commands print a compact operation plan by default. Add `--execute` to run the s
 `--reuse all` is the supported public reproduction mode for the released artifact package. It checks the downloaded artifacts and skips expensive recomputation while still validating the workflow and result tables.
 
 `--reuse none` runs the selected command group without artifact-backed skip. It requires the full local experiment environment and raw inputs used by the paper experiments, which are not part of this lightweight artifact package.
+
+In the public artifact package, the supported result-table workflow is artifact-backed validation and preview. Non-reuse runs are intended for complete experiment workspaces maintained separately from this release package.
 
 ## Release Checks
 
