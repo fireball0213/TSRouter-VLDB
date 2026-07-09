@@ -7,6 +7,8 @@ bundles/
 reproduction_logs/
 *_hf_upload*/
 *_hf_upload_*/
+*_hf_upload*.tar.zst
+*_hf_upload*.tar.zst.sha256
 docs/
 manifest.json
 checksums.sha256
