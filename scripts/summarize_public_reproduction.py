@@ -17,12 +17,22 @@ TABLES = [
     ("Table 5: combined overhead", "vldb_results_table5_combined_overhead_by_stage.csv"),
     ("Table 6.1: total overhead growth", "vldb_results_table6_1_total_overhead_growth.csv"),
     ("Table 6.2: P95 overhead growth", "vldb_results_table6_2_p95_overhead_growth.csv"),
+    ("Table 6.3: P95 growth points", "vldb_results_table6_3_figure4_p95_growth_points.csv"),
 ]
+
+DISPLAY_REPLACEMENTS = {
+    "☑": "*",
+    "鈽?": "*",
+    "â˜‘": "*",
+    "Step2InsertRuntime": "IncomingProfile",
+}
 
 
 def _shorten(value: object, width: int) -> str:
     text = "" if value is None else str(value)
     text = text.replace("\n", " ").replace("\r", " ")
+    for source, target in DISPLAY_REPLACEMENTS.items():
+        text = text.replace(source, target)
     if len(text) <= width:
         return text
     return text[: max(0, width - 3)] + "..."
@@ -53,6 +63,13 @@ def load_csv_rows(path: Path) -> list[dict[str, object]]:
         return [dict(row) for row in csv.DictReader(handle)]
 
 
+def path_exists(path: Path) -> bool:
+    try:
+        return path.exists()
+    except OSError:
+        return False
+
+
 def workflow_rows(path: Path) -> list[dict[str, object]]:
     data = json.loads(path.read_text(encoding="utf-8"))
     rows = []
@@ -63,7 +80,7 @@ def workflow_rows(path: Path) -> list[dict[str, object]]:
                 "step": step.get("index"),
                 "command": step.get("command"),
                 "artifact_reuse": step.get("artifact_backed_reuse"),
-                "backend_ops": len(backend_results),
+                "ops": len(backend_results),
                 "all_skipped": bool(backend_results) and all(item.get("skipped") for item in backend_results),
                 "elapsed_s": step.get("elapsed_seconds"),
             }
@@ -98,11 +115,12 @@ def main() -> int:
         print(f"missing workflow log: {workflow_path}")
 
     print("\n== Result Tables ==")
+    print("A leading * marks the highlighted value from the released table.")
     for title, filename in TABLES:
         path = tables_dir / filename
         print(f"\n### {title}")
         print(f"`{path.as_posix()}`")
-        if not path.exists():
+        if not path_exists(path):
             print("missing")
             continue
         rows = load_csv_rows(path)
