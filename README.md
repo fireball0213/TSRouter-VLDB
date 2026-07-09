@@ -1,57 +1,62 @@
 # TSRouter-VLDB
 
-TSRouter-VLDB provides the public reproduction interface for TSRouter and TSFM-ZooBench. The package stores release metadata, artifact layout definitions, and command entry points for downloading artifacts, checking integrity, and reproducing the released main paper tables.
+TSRouter-VLDB contains the public artifact package and reproduction tools for TSRouter and TSFM-ZooBench.
+
+TSFM-ZooBench is a benchmark for studying time-series foundation model service when the available model zoo grows over time. It records model quality, runtime, and routing evidence so that a serving method can be evaluated under realistic model-arrival and request workloads.
+
+TSRouter is a training-free routing method for this setting. It profiles the capability of available TSFMs, routes each forecasting request to a suitable model, and updates the routing evidence when new models or results are added. This repository focuses on the released paper artifacts: integrity checks, artifact-backed reproduction, and table previews for the main experimental results.
 
 Large artifacts are distributed through a Hugging Face Dataset. GitHub contains source code, small configuration files, scripts, and integrity checks.
 
-The artifact release provides the main-paper reproduction bundles for TSRouter-main, TSRouter-fast, and paper baselines.
+Artifact repository: https://huggingface.co/datasets/LAMDA-shihn/tsrouter-v1-artifacts
 
-## Artifact Setup
+## Setup
 
-Set the Hugging Face Dataset repo and local artifact root:
+Install the lightweight reproduction dependencies:
+
+```bash
+python -m pip install -r TSRouter-VLDB/requirements_core.txt
+```
+
+Set the Hugging Face Dataset repository when artifacts are not already present locally:
 
 ```bash
 export TSROUTER_VLDB_HF_REPO="LAMDA-shihn/tsrouter-v1-artifacts"
-export TSROUTER_VLDB_ARTIFACT_ROOT="/path/to/TSRouter-VLDB"
 ```
 
-If artifact bundles are already present under `TSRouter-VLDB/`, the repository variable is not required.
-
-Inspect the required bundles:
+Inspect, download, and verify the artifact bundles:
 
 ```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts plan --group core
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts plan --group all
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts pull --repo-id "$TSROUTER_VLDB_HF_REPO" --group all
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts check --group all --skip-contents
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts extract --group all
+python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts check --group all --skip-archives
 ```
 
-Download the core artifact bundles:
+## Reproduction
+
+Run the public artifact-backed workflow:
 
 ```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts pull --repo-id "$TSROUTER_VLDB_HF_REPO" --group core
+bash TSRouter-VLDB/scripts/run_public_reproduction.sh \
+  --root "$PWD" \
+  --python-bin "$(which python)" \
+  --mode full \
+  --reuse all
 ```
 
-Check the local release layout:
+If the bundles are not already present under `TSRouter-VLDB/`, add:
 
 ```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py check layout
+--pull --repo-id "$TSROUTER_VLDB_HF_REPO"
 ```
 
-Check and extract the local artifact bundles:
+The script verifies the release layout, extracts the bundles, executes the public workflow with artifact reuse, and prints the released table previews. JSON logs are written to `TSRouter-VLDB/reproduction_logs/`.
 
-```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts check --group core --skip-contents
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts extract --group core
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts check --group core --skip-archives
-```
+## Command Groups
 
-Check that the release execution contract matches the paper main grid and command plans:
-
-```bash
-python TSRouter-VLDB/scripts/check_release_contract.py
-```
-
-## Public Commands
-
-The public command groups use paper-facing names:
+The same workflow can be inspected or run one command group at a time:
 
 ```bash
 python TSRouter-VLDB/src/cli/tsrouter_vldb.py tsfm run --stage 20 --reuse all
@@ -62,36 +67,23 @@ python TSRouter-VLDB/src/cli/tsrouter_vldb.py baselines run --stage 20 --methods
 python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --stage 20 --write
 ```
 
-Commands print a dry execution plan by default. Add `--execute` to run the generated backend commands after checking the plan.
+Commands print a compact operation plan by default. Add `--execute` to run the selected group.
 
-## Workflows
+## Reuse Modes
 
-One-command public reproduction with readable progress and table previews:
+`--reuse all` is the supported public reproduction mode for the released artifact package. It checks the downloaded artifacts and skips expensive recomputation while still validating the workflow and result tables.
 
-```bash
-bash TSRouter-VLDB/scripts/run_public_reproduction.sh \
-  --root "$PWD" \
-  --python-bin "$(which python)" \
-  --mode full
-```
+`--reuse none` runs the selected command group without artifact-backed skip. It requires the full local experiment environment and raw inputs used by the paper experiments, which are not part of this lightweight artifact package.
 
-If the artifact bundles are not already present under `TSRouter-VLDB/`, add `--pull --repo-id "$TSROUTER_VLDB_HF_REPO"`.
-The script writes full JSON logs to `TSRouter-VLDB/reproduction_logs/` and prints a concise workflow summary plus released table previews.
+## Release Checks
 
-Artifact repository: https://huggingface.co/datasets/LAMDA-shihn/tsrouter-v1-artifacts
-
-Fast artifact-backed reproduction:
+Before publishing a code update, run:
 
 ```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run --mode fast --reuse all
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run --mode fast --reuse all --execute
+python TSRouter-VLDB/scripts/check_release_contract.py
+python TSRouter-VLDB/scripts/audit_public_surface.py
+python -m compileall TSRouter-VLDB/src TSRouter-VLDB/scripts
+bash -n TSRouter-VLDB/scripts/run_public_reproduction.sh
 ```
 
-Full artifact-backed reproduction:
-
-```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run --mode full --reuse all
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py workflow run --mode full --reuse all --execute
-```
-
-The artifact layout is defined in `configs/artifact_layout.yaml`.
+The artifact layout is defined in `configs/artifact_layout.yaml`; the public execution contract is defined in `configs/execution_contract.yaml`.

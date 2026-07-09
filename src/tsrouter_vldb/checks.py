@@ -17,7 +17,7 @@ class CheckResult:
 
 REQUIRED_CONFIGS = (
     "artifact_layout.yaml",
-    "legacy_run_contract.yaml",
+    "execution_contract.yaml",
     "model_registry.yaml",
     "paper_run_profiles.yaml",
     "paper_tables.yaml",

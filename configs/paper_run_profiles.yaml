@@ -21,10 +21,6 @@ main_profile:
   base_metrics: "C"
   repr_weight_ratio: 0.5
   sample_repr_num: 20
-  repr_data_seed: 2029
-  repr_encoder_seed: 2025
-  forward_seed: 2025
-  search_seed: 2025
   repr_sample_qc_mode: "strict"
   repr_scale_protocol: "standard"
   task_sample_strategy: "latest_random"
@@ -45,7 +41,7 @@ main_profile:
   model_repr_agg: "min"
   enable_process_metrics: true
   process_metrics_region_rule: "effective"
-  skip_step2_cluster_forward: true
+  skip_profile_forward_clusters: true
   route_efficiency_mode: false
   ge_fast_eval: true
   mix_route: false

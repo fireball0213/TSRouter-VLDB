@@ -4,7 +4,7 @@ from typing import Any
 
 from .artifacts import check_artifacts
 from .commands import COMMAND_ARTIFACT_GROUPS
-from .legacy import build_release_command_plan, execute_release_command_plan
+from .execution import build_release_command_plan, execute_release_command_plan
 
 
 class StageCommandError(RuntimeError):
@@ -55,7 +55,7 @@ def run_stage(command: str, args: Any) -> dict[str, Any]:
                     "skipped": True,
                     "reason": "artifact-backed reuse",
                 }
-                for item in payload.get("backend_commands", [])
+                for item in payload.get("_execution_commands", [])
                 if isinstance(item, dict)
             ]
             payload["ok"] = True

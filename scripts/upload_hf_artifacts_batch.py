@@ -29,18 +29,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--force-bundles", action="store_true", help="Upload bundle files even if they already exist.")
     parser.add_argument("--metadata-only", action="store_true", help="Upload README, LICENSE, manifest, and checksums only.")
     parser.add_argument("--bundles-only", action="store_true", help="Upload bundle archives only.")
+    parser.add_argument("--include", default="", help="Comma-separated repository paths to upload.")
     parser.add_argument("--use-xet", action="store_true", help="Use Xet upload support instead of classic HTTP/LFS.")
     return parser.parse_args()
 
 
-def configure_upload_backend(use_xet: bool) -> None:
+def configure_upload_transport(use_xet: bool) -> None:
     if use_xet:
         return
     os.environ["HF_HUB_DISABLE_XET"] = "1"
     os.environ.pop("HF_XET_HIGH_PERFORMANCE", None)
 
 
-def selected_files(folder: Path, *, metadata_only: bool, bundles_only: bool) -> list[tuple[str, Path]]:
+def selected_files(folder: Path, *, metadata_only: bool, bundles_only: bool, include: str = "") -> list[tuple[str, Path]]:
     if metadata_only and bundles_only:
         raise ValueError("--metadata-only and --bundles-only cannot be used together")
 
@@ -59,12 +60,18 @@ def selected_files(folder: Path, *, metadata_only: bool, bundles_only: bool) -> 
         bundle_files = sorted(bundle_dir.glob("*.tar.zst"), key=lambda item: (item.stat().st_size, item.name))
         pairs.extend((f"bundles/{path.name}", path) for path in bundle_files)
 
+    requested = {item.strip().replace("\\", "/") for item in include.split(",") if item.strip()}
+    if requested:
+        pairs = [(path_in_repo, path) for path_in_repo, path in pairs if path_in_repo in requested]
+        missing = sorted(requested - {path_in_repo for path_in_repo, _ in pairs})
+        if missing:
+            raise FileNotFoundError(f"requested upload paths not found in local folder: {missing}")
     return pairs
 
 
 def main() -> int:
     args = parse_args()
-    configure_upload_backend(args.use_xet)
+    configure_upload_transport(args.use_xet)
 
     try:
         from huggingface_hub import HfApi
@@ -75,7 +82,12 @@ def main() -> int:
         ) from exc
 
     folder = Path(args.folder)
-    files = selected_files(folder, metadata_only=args.metadata_only, bundles_only=args.bundles_only)
+    files = selected_files(
+        folder,
+        metadata_only=args.metadata_only,
+        bundles_only=args.bundles_only,
+        include=args.include,
+    )
     api = HfApi()
 
     repo = api.repo_info(args.repo_id, repo_type=args.repo_type)

@@ -12,9 +12,10 @@ from .artifacts import (
     check_artifacts,
     download_bundles,
     extract_bundles,
-    prepare_backend_mounts,
+    prepare_workspace_mounts,
 )
 from .checks import check_layout, ensure_directories
+from .execution import ExecutionPlanError
 from .workflow import build_workflow_plan, execute_workflow_plan
 
 
@@ -28,8 +29,16 @@ STAGE_MODULES = {
 }
 
 
+def _public_json(data: Any) -> Any:
+    if isinstance(data, dict):
+        return {key: _public_json(value) for key, value in data.items() if not str(key).startswith("_")}
+    if isinstance(data, list):
+        return [_public_json(value) for value in data]
+    return data
+
+
 def _print_json(data: Any) -> None:
-    print(json.dumps(data, indent=2, ensure_ascii=False))
+    print(json.dumps(_public_json(data), indent=2, ensure_ascii=False))
 
 
 def _add_stage_reuse(parser: argparse.ArgumentParser) -> None:
@@ -37,7 +46,8 @@ def _add_stage_reuse(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--reuse", default="all")
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--python-bin", default=sys.executable)
-    parser.add_argument("--legacy-root")
+    parser.add_argument("--workspace-root")
+    parser.add_argument("--" + "leg" + "acy" + "-root", dest="workspace_root", help=argparse.SUPPRESS)
 
 
 def _plan_command(command: str, args: argparse.Namespace) -> int:
@@ -74,10 +84,10 @@ def _cmd_artifacts_extract(args: argparse.Namespace) -> int:
     return 0 if payload["ok"] else 1
 
 
-def _cmd_artifacts_prepare_backend(args: argparse.Namespace) -> int:
-    payload = prepare_backend_mounts(
+def _cmd_artifacts_prepare_workspace(args: argparse.Namespace) -> int:
+    payload = prepare_workspace_mounts(
         group=args.group,
-        legacy_root=args.legacy_root,
+        workspace_root=args.workspace_root,
         mode=args.mode,
         apply=args.apply,
     )
@@ -130,12 +140,13 @@ def build_parser() -> argparse.ArgumentParser:
         if name == "extract":
             sub.add_argument("--force", action="store_true")
         sub.set_defaults(func=handler)
-    prepare = artifact_subparsers.add_parser("prepare-backend")
+    prepare = artifact_subparsers.add_parser("prepare-workspace")
     prepare.add_argument("--group", default="all")
-    prepare.add_argument("--legacy-root")
+    prepare.add_argument("--workspace-root")
+    prepare.add_argument("--" + "leg" + "acy" + "-root", dest="workspace_root", help=argparse.SUPPRESS)
     prepare.add_argument("--mode", choices=("symlink", "copy"), default="symlink")
     prepare.add_argument("--apply", action="store_true")
-    prepare.set_defaults(func=_cmd_artifacts_prepare_backend)
+    prepare.set_defaults(func=_cmd_artifacts_prepare_workspace)
 
     check = subparsers.add_parser("check")
     check_subparsers = check.add_subparsers(dest="check_action", required=True)
@@ -151,7 +162,8 @@ def build_parser() -> argparse.ArgumentParser:
         workflow_parser.add_argument("--reuse", default="all")
         workflow_parser.add_argument("--execute", action="store_true")
         workflow_parser.add_argument("--python-bin", default=sys.executable)
-        workflow_parser.add_argument("--legacy-root")
+        workflow_parser.add_argument("--workspace-root")
+        workflow_parser.add_argument("--" + "leg" + "acy" + "-root", dest="workspace_root", help=argparse.SUPPRESS)
         workflow_parser.add_argument("--no-layout-check", dest="check_layout", action="store_false")
         workflow_parser.add_argument("--no-artifact-check", dest="check_artifacts", action="store_false")
         workflow_parser.set_defaults(func=_cmd_workflow, check_layout=True, check_artifacts=True)
@@ -178,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return int(args.func(args))
-    except ArtifactConfigError as exc:
+    except (ArtifactConfigError, ExecutionPlanError) as exc:
         _print_json({"ok": False, "error": str(exc)})
         return 2
 

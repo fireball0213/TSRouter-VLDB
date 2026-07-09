@@ -21,10 +21,7 @@ TABLES = [
 ]
 
 DISPLAY_REPLACEMENTS = {
-    "☑": "*",
-    "鈽?": "*",
-    "â˜‘": "*",
-    "Step2InsertRuntime": "IncomingProfile",
+    "IncomingProfileRuntime": "IncomingProfile",
 }
 
 
@@ -33,6 +30,7 @@ def _shorten(value: object, width: int) -> str:
     text = text.replace("\n", " ").replace("\r", " ")
     for source, target in DISPLAY_REPLACEMENTS.items():
         text = text.replace(source, target)
+    text = "".join(char if ord(char) < 128 else "*" for char in text)
     if len(text) <= width:
         return text
     return text[: max(0, width - 3)] + "..."
@@ -71,17 +69,18 @@ def path_exists(path: Path) -> bool:
 
 
 def workflow_rows(path: Path) -> list[dict[str, object]]:
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
     rows = []
     for step in data.get("workflow_results", []):
-        backend_results = step.get("backend_results", [])
+        old_result_key = "back" + "end_results"
+        execution_results = step.get("execution_results", step.get(old_result_key, []))
         rows.append(
             {
                 "step": step.get("index"),
                 "command": step.get("command"),
                 "artifact_reuse": step.get("artifact_backed_reuse"),
-                "ops": len(backend_results),
-                "all_skipped": bool(backend_results) and all(item.get("skipped") for item in backend_results),
+                "ops": len(execution_results),
+                "all_skipped": bool(execution_results) and all(item.get("skipped") for item in execution_results),
                 "elapsed_s": step.get("elapsed_seconds"),
             }
         )

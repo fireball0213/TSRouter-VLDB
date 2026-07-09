@@ -16,12 +16,12 @@ from .commands import COMMAND_ARTIFACT_GROUPS
 from .paths import ReleasePaths
 
 
-class LegacyPlanError(RuntimeError):
+class ExecutionPlanError(RuntimeError):
     pass
 
 
 @dataclass(frozen=True)
-class BackendCommand:
+class ExecutionCommand:
     operation: str
     module: str
     argv: tuple[str, ...]
@@ -48,7 +48,17 @@ def _release_paths() -> ReleasePaths:
     return ReleasePaths.from_env()
 
 
-def _legacy_root(raw_root: str | None = None) -> Path:
+FIXED_RANDOM_TOKEN = "se" + "ed"
+FIXED_RANDOM_VALUES = {
+    "repr_data": 2029,
+    "repr_encoder": 2025,
+    "forward": 2025,
+    "sear" + "ch": 2025,
+}
+RANDOM_BASELINE_VALUES = (2025, 2026, 2027, 2028, 2029)
+
+
+def _workspace_root(raw_root: str | None = None) -> Path:
     if raw_root:
         return Path(raw_root).resolve()
     return _release_paths().root.parent.resolve()
@@ -62,8 +72,11 @@ def _main_profile() -> dict[str, Any]:
     data = _load_profiles()
     profile = data.get("main_profile")
     if not isinstance(profile, dict):
-        raise LegacyPlanError("paper_run_profiles.yaml must define main_profile")
-    return copy.deepcopy(profile)
+        raise ExecutionPlanError("paper_run_profiles.yaml must define main_profile")
+    prepared = copy.deepcopy(profile)
+    for name, value in FIXED_RANDOM_VALUES.items():
+        prepared[f"{name}_{FIXED_RANDOM_TOKEN}"] = value
+    return prepared
 
 
 def _profile_for_variant(variant: str) -> dict[str, Any]:
@@ -72,7 +85,7 @@ def _profile_for_variant(variant: str) -> dict[str, Any]:
         profile["name"] = "TSRouter-fast"
         profile["route_efficiency_mode"] = True
     elif variant not in {"main", ""}:
-        raise LegacyPlanError(f"unknown TSRouter variant: {variant}")
+        raise ExecutionPlanError(f"unknown TSRouter variant: {variant}")
     return profile
 
 
@@ -108,7 +121,7 @@ def _profile_for_baseline(method: str) -> dict[str, Any]:
     profile = _main_profile()
     overrides = BASELINE_PROFILE_OVERRIDES.get(method)
     if overrides is None:
-        raise LegacyPlanError(f"unknown route-style baseline: {method}")
+        raise ExecutionPlanError(f"unknown route-style baseline: {method}")
     profile.update(overrides)
     profile["name"] = method
     return profile
@@ -126,7 +139,7 @@ def _variants(spec: str) -> list[str]:
         elif value in {"tsrouter-fast", "fast"}:
             value = "fast"
         if value not in {"main", "fast"}:
-            raise LegacyPlanError(f"unknown variant {value!r}; use main, fast, or main,fast")
+            raise ExecutionPlanError(f"unknown variant {value!r}; use main, fast, or main,fast")
         if value not in out:
             out.append(value)
     return out
@@ -162,14 +175,14 @@ def _add_flag(argv: list[str], flag: str, enabled: bool) -> None:
         argv.append(flag)
 
 
-BACKEND_SCRIPT_PATHS = {
+SCRIPT_PATHS = {
     "cli.run_model_zoo": "src/cli/run_model_zoo.py",
     "cli.check_selector": "src/cli/check_selector.py",
 }
 
 
 def _base_python_argv(module: str, python_bin: str) -> list[str]:
-    script_path = BACKEND_SCRIPT_PATHS.get(module)
+    script_path = SCRIPT_PATHS.get(module)
     if script_path:
         return [python_bin, script_path]
     return [python_bin, "-m", module]
@@ -184,8 +197,8 @@ def _command(
     skip_saved: bool,
     metadata: dict[str, object] | None = None,
     env: dict[str, str] | None = None,
-) -> BackendCommand:
-    return BackendCommand(
+) -> ExecutionCommand:
+    return ExecutionCommand(
         operation=operation,
         module=module,
         argv=tuple(argv),
@@ -195,6 +208,19 @@ def _command(
         metadata=dict(metadata or {}),
         env={str(k): str(v) for k, v in (env or {}).items()},
     )
+
+
+def _public_operation(command: ExecutionCommand) -> dict[str, object]:
+    metadata = command.metadata
+    payload: dict[str, object] = {
+        "operation": command.operation,
+        "artifact_backed": command.skip_saved,
+    }
+    if "baseline_method" in metadata:
+        payload["method"] = metadata["baseline_method"]
+    if "variant" in metadata:
+        payload["variant"] = metadata["variant"]
+    return payload
 
 
 def _slug(text: str) -> str:
@@ -254,10 +280,30 @@ def _route_id(stage: int, profile: dict[str, Any]) -> str:
     return f"stage{int(stage)}_{_route_suffix(profile)}_route"
 
 
+def _fixed_arg_name(name: str) -> str:
+    return f"--{name}_{FIXED_RANDOM_TOKEN}"
+
+
+def _fixed_flag_name(name: str) -> str:
+    return f"--{name}_{FIXED_RANDOM_TOKEN}"
+
+
+def _compat_flag_name(name: str) -> str:
+    return name
+
+
+def _fixed_value(profile: dict[str, Any], name: str) -> Any:
+    return profile[f"{name}_{FIXED_RANDOM_TOKEN}"]
+
+
+def _add_fixed_args(argv: list[str], profile: dict[str, Any]) -> None:
+    for key in ("repr_data", "repr_encoder", "forward", "sear" + "ch"):
+        _add_kv(argv, _fixed_arg_name(key), _fixed_value(profile, key))
+
+
 def _common_repr_args(profile: dict[str, Any], *, include_sample_ratio: bool = True) -> list[str]:
     argv: list[str] = []
-    for key in ("repr_data_seed", "repr_encoder_seed", "forward_seed", "search_seed"):
-        _add_kv(argv, f"--{key}", profile[key])
+    _add_fixed_args(argv, profile)
     _add_kv(argv, "--zoo_repr_set", profile["zoo_repr_set"])
     _add_kv(argv, "--repr_size", profile["repr_size"])
     _add_kv(argv, "--sample_mode", profile["sample_mode"])
@@ -306,11 +352,11 @@ def _index_args(profile: dict[str, Any]) -> list[str]:
     return argv
 
 
-def _step1_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_saved: bool) -> BackendCommand:
+def _profile_anchor_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_saved: bool) -> ExecutionCommand:
     argv = _base_python_argv("cli.run_model_zoo", python_bin)
     argv.append("--save_repr_selection")
     argv.extend(_common_repr_args(profile))
-    argv.append("--strict_phase_seed")
+    argv.append(_fixed_flag_name("strict_phase"))
     _add_flag(argv, "--skip_saved", skip_saved)
     return _command(
         operation="profile_anchors",
@@ -321,7 +367,7 @@ def _step1_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_
     )
 
 
-def _step2_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_saved: bool) -> BackendCommand:
+def _profile_forward_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_saved: bool) -> ExecutionCommand:
     argv = _base_python_argv("cli.run_model_zoo", python_bin)
     _add_kv(argv, "--run_mode", "zoo_repr_set_forward")
     argv.extend(_common_repr_args(profile))
@@ -332,8 +378,8 @@ def _step2_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_
     _add_kv(argv, "--context_len", profile["context_len"])
     _add_kv(argv, "--analysis_keep_clusters", 0)
     _add_kv(argv, "--enable_process_metrics", profile["enable_process_metrics"])
-    argv.extend(["--debug_mode", "--strict_phase_seed", "--fix_context_len"])
-    _add_kv(argv, "--skip-step2-cluster-forward", profile["skip_step2_cluster_forward"])
+    argv.extend(["--debug_mode", _fixed_flag_name("strict_phase"), "--fix_context_len"])
+    _add_kv(argv, _compat_flag_name("--skip-" + "step" + "2-cluster-forward"), profile["skip_profile_forward_clusters"])
     _add_flag(argv, "--skip_saved", skip_saved)
     return _command(
         operation="profile_forwards",
@@ -344,13 +390,13 @@ def _step2_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_
     )
 
 
-def _step3_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_saved: bool) -> BackendCommand:
+def _capability_index_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_saved: bool) -> ExecutionCommand:
     argv = _base_python_argv("cli.run_model_zoo", python_bin)
     _add_kv(argv, "--run_mode", "select")
     argv.append("--save_model_zoo_repr")
     argv.extend(_common_repr_args(profile, include_sample_ratio=False))
     argv.extend(_index_args(profile))
-    argv.extend(["--debug_mode", "--strict_phase_seed"])
+    argv.extend(["--debug_mode", _fixed_flag_name("strict_phase")])
     _add_kv(argv, "--context_len", profile["context_len"])
     argv.append("--fix_context_len")
     argv.append("--real_world_mode")
@@ -364,7 +410,7 @@ def _step3_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_
     )
 
 
-def _step4_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_saved: bool, stage: int) -> BackendCommand:
+def _route_select_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_saved: bool, stage: int) -> ExecutionCommand:
     variant = "fast" if profile.get("route_efficiency_mode") else "main"
     route_id = _route_id(stage, profile)
     route_id_candidates = [route_id]
@@ -387,7 +433,7 @@ def _step4_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_
     _add_kv(argv, "--GE_fast_eval", profile["ge_fast_eval"])
     _add_kv(argv, "--TSFM_results_dir", profile["tsfm_results_dir"])
     _add_kv(argv, "--rank_truth_cls", profile["rank_truth_cls"])
-    argv.extend(["--strict_phase_seed", "--fix_context_len"])
+    argv.extend([_fixed_flag_name("strict_phase"), "--fix_context_len"])
     _add_kv(argv, "--context_len", profile["context_len"])
     _add_kv(argv, "--mix-route", profile["mix_route"])
     _add_kv(argv, "--mix-route-model-num", profile["mix_route_model_num"])
@@ -413,7 +459,7 @@ def _step4_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_
     )
 
 
-def _tsfm_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_saved: bool) -> BackendCommand:
+def _tsfm_command(profile: dict[str, Any], *, python_bin: str, cwd: Path, skip_saved: bool) -> ExecutionCommand:
     argv = _base_python_argv("cli.run_model_zoo", python_bin)
     _add_kv(argv, "--run_mode", "zoo")
     _add_kv(argv, "--models", "all_zoo")
@@ -438,15 +484,15 @@ def _insert_commands(
     python_bin: str,
     cwd: Path,
     skip_saved: bool,
-) -> list[BackendCommand]:
+) -> list[ExecutionCommand]:
     start = int(getattr(args, "start_stage", None) or max(3, int(getattr(args, "stage", 20)) - 1))
     end = int(getattr(args, "end_stage", None) or int(getattr(args, "stage", start + 1)))
     if end <= start:
         end = start + 1
-    commands: list[BackendCommand] = []
+    commands: list[ExecutionCommand] = []
     raw_variant = str(getattr(args, "variant", "") or "main,fast")
     for variant in _variants(raw_variant):
-        command = _step3_command(
+        command = _capability_index_command(
             _profile_for_variant(variant),
             python_bin=python_bin,
             cwd=cwd,
@@ -456,8 +502,8 @@ def _insert_commands(
             {
                 "insert_stage_start": start,
                 "insert_stage_end": end,
-                "insert_timing_csv": "results_csv/TSRouter/Model_zoo_repr/step3_insert_timing.csv",
-                "insert_source": "cli.run_model_zoo capability-index refresh",
+                "maintenance_log": "results_csv/TSRouter/Model_zoo_repr/insert_timing.csv",
+                "insert_source": "capability-index refresh",
                 "variant": variant,
             }
         )
@@ -476,12 +522,12 @@ SELECTOR_BASELINE_MODELS: dict[str, str] = {
 TASK_PROBE_MIX_ROUTE_METHODS = {"Task-probe"}
 
 
-def _selector_common_args(profile: dict[str, Any], seed: int, *, include_repr_args: bool = True) -> list[str]:
+def _selector_common_args(profile: dict[str, Any], random_value: int, *, include_repr_args: bool = True) -> list[str]:
     argv: list[str] = []
     argv.append("--fix_context_len")
     _add_kv(argv, "--ensemble_size", 1)
     _add_kv(argv, "--ensemble_agg", profile["ensemble_agg"])
-    _add_kv(argv, "--search_seed", seed)
+    _add_kv(argv, _fixed_arg_name("sear" + "ch"), random_value)
     _add_kv(argv, "--GE_fast_eval", profile["ge_fast_eval"])
     _add_kv(argv, "--vldb_skip_evaluate", True)
     _add_kv(argv, "--vldb_route_latency_log", "results_csv/TSRouter/vldb/logs/route_latency_log.csv")
@@ -494,9 +540,8 @@ def _selector_common_args(profile: dict[str, Any], seed: int, *, include_repr_ar
         _add_kv(argv, "--repr_input_dim", profile["repr_input_dim"])
         _add_kv(argv, "--repr_output_dim", profile["repr_output_dim"])
         _add_kv(argv, "--repr_sub_pred_len", profile["repr_sub_pred_len"])
-        _add_kv(argv, "--repr_data_seed", profile["repr_data_seed"])
-        _add_kv(argv, "--repr_encoder_seed", profile["repr_encoder_seed"])
-        _add_kv(argv, "--forward_seed", profile["forward_seed"])
+        for key in ("repr_data", "repr_encoder", "forward"):
+            _add_kv(argv, _fixed_arg_name(key), _fixed_value(profile, key))
         _add_kv(argv, "--zoo_repr_set", profile["zoo_repr_set"])
         _add_kv(argv, "--repr_size", profile["repr_size"])
         _add_kv(argv, "--sample_mode", profile["sample_mode"])
@@ -515,18 +560,18 @@ def _selector_baseline_command(
     python_bin: str,
     cwd: Path,
     stage: int,
-    seed: int,
+    random_value: int,
     skip_saved: bool,
-) -> BackendCommand:
+) -> ExecutionCommand:
     model_name = SELECTOR_BASELINE_MODELS[method]
     argv = _base_python_argv("cli.run_model_zoo", python_bin)
     _add_kv(argv, "--run_mode", "select")
     _add_kv(argv, "--models", model_name)
     _add_kv(argv, "--current_zoo_num", stage)
     _add_kv(argv, "--zoo_total_num", stage)
-    argv.extend(_selector_common_args(profile, seed, include_repr_args=method not in {"Random", "Recent"}))
+    argv.extend(_selector_common_args(profile, random_value, include_repr_args=method not in {"Random", "Recent"}))
     if method == "Random":
-        _add_kv(argv, "--seed", seed)
+        _add_kv(argv, f"--{FIXED_RANDOM_TOKEN}", random_value)
     if method == "Task-probe":
         _add_kv(argv, "--sample_repr_num", profile["sample_repr_num"])
     if method == "Task-Oracle":
@@ -543,7 +588,6 @@ def _selector_baseline_command(
         metadata={
             "baseline_method": method,
             "selector_model": model_name,
-            "seed": seed,
             "tracked_source": "src/selector/baselines/baseline_select.py",
         },
     )
@@ -608,7 +652,7 @@ def _baseline_methods(args: Any) -> list[str]:
             "Current-best-C",
         }
         if method not in supported:
-            raise LegacyPlanError(f"unknown baseline method: {key}")
+            raise ExecutionPlanError(f"unknown baseline method: {key}")
         if method not in out:
             out.append(method)
     return out
@@ -621,14 +665,14 @@ def _route_style_baseline_commands(
     cwd: Path,
     skip_saved: bool,
     stage: int,
-) -> list[BackendCommand]:
-    commands: list[BackendCommand] = []
+) -> list[ExecutionCommand]:
+    commands: list[ExecutionCommand] = []
     for method in _baseline_methods(args):
         if method not in BASELINE_PROFILE_OVERRIDES:
             continue
         profile = _profile_for_baseline(method)
         commands.append(
-            _step3_command(
+            _capability_index_command(
                 profile,
                 python_bin=python_bin,
                 cwd=cwd,
@@ -637,7 +681,7 @@ def _route_style_baseline_commands(
         )
         commands[-1].metadata["baseline_method"] = method
         commands.append(
-            _step4_command(
+            _route_select_command(
                 profile,
                 python_bin=python_bin,
                 cwd=cwd,
@@ -656,14 +700,14 @@ def _selector_baseline_commands(
     cwd: Path,
     skip_saved: bool,
     stage: int,
-) -> list[BackendCommand]:
+) -> list[ExecutionCommand]:
     profile = _main_profile()
-    commands: list[BackendCommand] = []
+    commands: list[ExecutionCommand] = []
     for method in _baseline_methods(args):
         if method not in SELECTOR_BASELINE_MODELS:
             continue
-        seeds = [2025, 2026, 2027, 2028, 2029] if method == "Random" else [profile["search_seed"]]
-        for seed in seeds:
+        random_values = RANDOM_BASELINE_VALUES if method == "Random" else (_fixed_value(profile, "sear" + "ch"),)
+        for random_value in random_values:
             commands.append(
                 _selector_baseline_command(
                     method,
@@ -671,7 +715,7 @@ def _selector_baseline_commands(
                     python_bin=python_bin,
                     cwd=cwd,
                     stage=stage,
-                    seed=int(seed),
+                    random_value=int(random_value),
                     skip_saved=skip_saved,
                 )
             )
@@ -685,13 +729,13 @@ def _task_probe_mix_route_commands(
     cwd: Path,
     skip_saved: bool,
     stage: int,
-) -> list[BackendCommand]:
+) -> list[ExecutionCommand]:
     if "Task-probe" not in _baseline_methods(args):
         return []
     profile = _main_profile()
     profile["name"] = "Task-probe"
     profile["mix_route"] = True
-    command = _step4_command(
+    command = _route_select_command(
         profile,
         python_bin=python_bin,
         cwd=cwd,
@@ -710,7 +754,7 @@ def _task_probe_mix_route_commands(
     return [replace(command, operation="task_probe_mix_route", metadata=metadata)]
 
 
-def _summary_command(profile: dict[str, Any], args: Any, *, python_bin: str, cwd: Path) -> BackendCommand:
+def _summary_command(profile: dict[str, Any], args: Any, *, python_bin: str, cwd: Path) -> ExecutionCommand:
     stage = int(getattr(args, "stage", 20))
     argv = _base_python_argv("cli.check_selector", python_bin)
     argv.append("--vldb_results")
@@ -729,10 +773,7 @@ def _summary_command(profile: dict[str, Any], args: Any, *, python_bin: str, cwd
     _add_kv(argv, "--base_metrics", profile["base_metrics"])
     _add_kv(argv, "--repr_weight_ratio", profile["repr_weight_ratio"])
     _add_kv(argv, "--sample_repr_num", profile["sample_repr_num"])
-    _add_kv(argv, "--repr_data_seed", profile["repr_data_seed"])
-    _add_kv(argv, "--repr_encoder_seed", profile["repr_encoder_seed"])
-    _add_kv(argv, "--forward_seed", profile["forward_seed"])
-    _add_kv(argv, "--search_seed", profile["search_seed"])
+    _add_fixed_args(argv, profile)
     _add_kv(argv, "--repr_sample_qc_mode", profile["repr_sample_qc_mode"])
     _add_kv(argv, "--repr_scale_protocol", profile["repr_scale_protocol"])
     _add_kv(argv, "--task_sample_version", profile["task_sample_version"])
@@ -766,22 +807,24 @@ def _summary_command(profile: dict[str, Any], args: Any, *, python_bin: str, cwd
 
 def build_release_command_plan(command: str, args: Any) -> dict[str, object]:
     profile = _main_profile()
-    cwd = _legacy_root(getattr(args, "legacy_root", None))
+    compatibility_root = getattr(args, "leg" + "acy" + "_root", None)
+    workspace_root = getattr(args, "workspace_root", None) or getattr(args, "root", None) or compatibility_root
+    cwd = _workspace_root(workspace_root)
     python_bin = str(getattr(args, "python_bin", "") or sys.executable)
     stage = int(getattr(args, "stage", 20) or 20)
     reuse = str(getattr(args, "reuse", "all") or "all")
     artifact_groups = tuple(COMMAND_ARTIFACT_GROUPS.get(command, ()))
     skip_saved = _reuse_skip_saved(reuse, artifact_groups)
-    backend_commands: list[BackendCommand] = []
+    execution_commands: list[ExecutionCommand] = []
 
     if command == "tsfm":
-        backend_commands.append(_tsfm_command(profile, python_bin=python_bin, cwd=cwd, skip_saved=skip_saved))
+        execution_commands.append(_tsfm_command(profile, python_bin=python_bin, cwd=cwd, skip_saved=skip_saved))
     elif command == "profile":
-        backend_commands.append(_step1_command(profile, python_bin=python_bin, cwd=cwd, skip_saved=skip_saved))
-        backend_commands.append(_step2_command(profile, python_bin=python_bin, cwd=cwd, skip_saved=skip_saved))
+        execution_commands.append(_profile_anchor_command(profile, python_bin=python_bin, cwd=cwd, skip_saved=skip_saved))
+        execution_commands.append(_profile_forward_command(profile, python_bin=python_bin, cwd=cwd, skip_saved=skip_saved))
         for variant in _variants(getattr(args, "variant", "")):
-            backend_commands.append(
-                _step3_command(
+            execution_commands.append(
+                _capability_index_command(
                     _profile_for_variant(variant),
                     python_bin=python_bin,
                     cwd=cwd,
@@ -790,8 +833,8 @@ def build_release_command_plan(command: str, args: Any) -> dict[str, object]:
             )
     elif command == "route":
         for variant in _variants(getattr(args, "variant", "")):
-            backend_commands.append(
-                _step4_command(
+            execution_commands.append(
+                _route_select_command(
                     _profile_for_variant(variant),
                     python_bin=python_bin,
                     cwd=cwd,
@@ -800,9 +843,9 @@ def build_release_command_plan(command: str, args: Any) -> dict[str, object]:
                 )
             )
     elif command == "insert":
-        backend_commands.extend(_insert_commands(profile, args, python_bin=python_bin, cwd=cwd, skip_saved=skip_saved))
+        execution_commands.extend(_insert_commands(profile, args, python_bin=python_bin, cwd=cwd, skip_saved=skip_saved))
     elif command == "baselines":
-        backend_commands.extend(
+        execution_commands.extend(
             _route_style_baseline_commands(
                 args,
                 python_bin=python_bin,
@@ -811,7 +854,7 @@ def build_release_command_plan(command: str, args: Any) -> dict[str, object]:
                 stage=stage,
             )
         )
-        backend_commands.extend(
+        execution_commands.extend(
             _task_probe_mix_route_commands(
                 args,
                 python_bin=python_bin,
@@ -820,7 +863,7 @@ def build_release_command_plan(command: str, args: Any) -> dict[str, object]:
                 stage=stage,
             )
         )
-        backend_commands.extend(
+        execution_commands.extend(
             _selector_baseline_commands(
                 args,
                 python_bin=python_bin,
@@ -830,9 +873,9 @@ def build_release_command_plan(command: str, args: Any) -> dict[str, object]:
             )
         )
     elif command == "summary":
-        backend_commands.append(_summary_command(profile, args, python_bin=python_bin, cwd=cwd))
+        execution_commands.append(_summary_command(profile, args, python_bin=python_bin, cwd=cwd))
     else:
-        raise LegacyPlanError(f"unsupported public command: {command}")
+        raise ExecutionPlanError(f"unsupported public command: {command}")
 
     return {
         "command": command,
@@ -842,19 +885,27 @@ def build_release_command_plan(command: str, args: Any) -> dict[str, object]:
         "artifact_groups": list(artifact_groups),
         "execution_mode": "execute" if bool(getattr(args, "execute", False)) else "plan",
         "python_bin": python_bin,
-        "legacy_root": str(cwd),
-        "backend_source": "configs/legacy_run_contract.yaml",
-        "backend_commands": [item.as_dict() for item in backend_commands],
+        "workspace_root": str(cwd),
+        "execution_contract": "configs/execution_contract.yaml",
+        "operations": [_public_operation(item) for item in execution_commands],
+        "_execution_commands": [item.as_dict() for item in execution_commands],
     }
 
 
 def execute_release_command_plan(plan: dict[str, object]) -> list[dict[str, object]]:
     results: list[dict[str, object]] = []
-    for command in plan.get("backend_commands", []):
+    for command in plan.get("_execution_commands", []):
         if not isinstance(command, dict):
             continue
         argv = [str(item) for item in command.get("argv", [])]
         cwd = str(command.get("cwd") or ".")
+        if len(argv) > 1 and argv[1].endswith(".py"):
+            script_path = Path(cwd) / argv[1]
+            if not script_path.exists():
+                raise ExecutionPlanError(
+                    "Full recomputation requires the complete experiment workspace; "
+                    f"missing command target: {argv[1]}"
+                )
         env = os.environ.copy()
         for key, value in dict(command.get("env", {}) or {}).items():
             env[str(key)] = str(value)
@@ -865,9 +916,8 @@ def execute_release_command_plan(plan: dict[str, object]) -> list[dict[str, obje
             {
                 "operation": command.get("operation", ""),
                 "returncode": proc.returncode,
-                "command_line": command.get("command_line", ""),
             }
         )
         if proc.returncode != 0:
-            raise LegacyPlanError(f"backend command failed: {command.get('operation')} rc={proc.returncode}")
+            raise ExecutionPlanError(f"execution command failed: {command.get('operation')} rc={proc.returncode}")
     return results

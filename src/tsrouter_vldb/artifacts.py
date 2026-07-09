@@ -35,13 +35,13 @@ class ArtifactBundle:
     contents: tuple[str, ...]
     required_paths: tuple[str, ...]
     staging_root: str
-    backend_mounts: tuple[tuple[str, str, bool], ...]
+    workspace_mounts: tuple[tuple[str, str, bool], ...]
 
     @classmethod
     def from_mapping(cls, bundle_id: str, data: dict[str, Any]) -> "ArtifactBundle":
         mounts = tuple(
             (str(item["source"]), str(item["target"]), bool(item.get("required", True)))
-            for item in data.get("backend_mounts", [])
+            for item in data.get("workspace_mounts", [])
             if isinstance(item, dict)
         )
         return cls(
@@ -52,7 +52,7 @@ class ArtifactBundle:
             contents=tuple(str(value) for value in data.get("contents", [])),
             required_paths=tuple(str(value) for value in data.get("required_paths", [])),
             staging_root=str(data.get("staging_root", ".")),
-            backend_mounts=mounts,
+            workspace_mounts=mounts,
         )
 
 
@@ -118,9 +118,9 @@ def build_download_plan(
                 "staging_root": bundle.staging_root,
                 "contents": list(bundle.contents),
                 "required_paths": list(bundle.required_paths),
-                "backend_mounts": [
+                "workspace_mounts": [
                     {"source": source, "target": target, "required": required}
-                    for source, target, required in bundle.backend_mounts
+                    for source, target, required in bundle.workspace_mounts
                 ],
             }
             for bundle in bundles
@@ -258,7 +258,7 @@ def check_artifacts(
                 "target": target,
                 "required": required,
             }
-            for source, target, required in bundle.backend_mounts
+            for source, target, required in bundle.workspace_mounts
         ]
         archive_ok = True if archive_status is None else bool(archive_status["exists"])
         contents_ok = all(item["exists"] for item in content_statuses) if content_statuses else True
@@ -271,7 +271,7 @@ def check_artifacts(
                 "archive": archive_status,
                 "contents": content_statuses,
                 "required_paths": required_statuses,
-                "backend_mount_sources": mount_sources,
+                "workspace_mount_sources": mount_sources,
                 "ok": archive_ok and contents_ok and required_ok and mounts_ok,
             }
         )
@@ -346,26 +346,26 @@ def _copy_path(source: Path, target: Path) -> None:
         shutil.copy2(source, target)
 
 
-def prepare_backend_mounts(
+def prepare_workspace_mounts(
     *,
     group: str = "all",
     paths: ReleasePaths | None = None,
-    legacy_root: str | os.PathLike[str] | None = None,
+    workspace_root: str | os.PathLike[str] | None = None,
     mode: str = "symlink",
     apply: bool = False,
 ) -> dict[str, Any]:
     if mode not in {"symlink", "copy"}:
-        raise ArtifactConfigError("backend prepare mode must be 'symlink' or 'copy'")
+        raise ArtifactConfigError("workspace prepare mode must be 'symlink' or 'copy'")
 
     release_paths = paths or ReleasePaths.from_env()
-    backend_root = Path(legacy_root).resolve() if legacy_root else release_paths.root.parent.resolve()
+    target_root = Path(workspace_root).resolve() if workspace_root else release_paths.root.parent.resolve()
     layout = ArtifactLayout.load(release_paths)
     actions = []
 
     for bundle in layout.select(group=group):
-        for source_rel, target_rel, required in bundle.backend_mounts:
+        for source_rel, target_rel, required in bundle.workspace_mounts:
             source = (release_paths.artifact_root / source_rel).resolve()
-            target = (backend_root / target_rel).resolve()
+            target = (target_root / target_rel).resolve()
             action = {
                 "bundle_id": bundle.bundle_id,
                 "source": str(source),
@@ -406,7 +406,7 @@ def prepare_backend_mounts(
     return {
         "ok": all(item["ok"] for item in actions),
         "artifact_root": str(release_paths.artifact_root),
-        "legacy_root": str(backend_root),
+        "workspace_root": str(target_root),
         "group": group,
         "apply": apply,
         "actions": actions,

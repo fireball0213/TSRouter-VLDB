@@ -18,7 +18,7 @@ RELEASE_ROOT = SCRIPT_PATH.parents[1]
 PROJECT_ROOT = RELEASE_ROOT.parent
 sys.path.insert(0, str(RELEASE_ROOT / "src"))
 
-from tsrouter_vldb.legacy import build_release_command_plan  # noqa: E402
+from tsrouter_vldb.execution import build_release_command_plan  # noqa: E402
 
 
 def read_yaml(path: Path) -> dict[str, Any]:
@@ -56,7 +56,7 @@ def route_plan(variant: str) -> dict[str, Any]:
         reuse="all",
         execute=False,
         python_bin=sys.executable,
-        legacy_root=str(PROJECT_ROOT),
+        workspace_root=str(PROJECT_ROOT),
         variant=variant,
         methods="",
         table="",
@@ -64,7 +64,7 @@ def route_plan(variant: str) -> dict[str, Any]:
         end_stage=None,
         write=False,
     )
-    return build_release_command_plan("route", args)["backend_commands"][0]
+    return build_release_command_plan("route", args)["_execution_commands"][0]
 
 
 def check_release_profiles(profiles: dict[str, Any]) -> list[dict[str, Any]]:
@@ -111,7 +111,7 @@ def check_route_plans(contract: dict[str, Any]) -> list[dict[str, Any]]:
 
 def main() -> int:
     profiles = read_yaml(RELEASE_ROOT / "configs" / "paper_run_profiles.yaml")
-    contract = read_yaml(RELEASE_ROOT / "configs" / "legacy_run_contract.yaml")
+    contract = read_yaml(RELEASE_ROOT / "configs" / "execution_contract.yaml")
 
     checks = []
     checks.extend(check_release_profiles(profiles))

@@ -7,7 +7,7 @@ from typing import Any
 from .artifacts import check_artifacts
 from .checks import check_layout
 from .commands import COMMAND_ARTIFACT_GROUPS
-from .legacy import execute_release_command_plan
+from .execution import execute_release_command_plan
 from .stages import build_stage_plan
 
 
@@ -66,7 +66,7 @@ def _namespace_for_step(step: WorkflowStep, args: Any) -> Any:
     ns.reuse = str(getattr(args, "reuse", "all") or "all")
     ns.execute = bool(getattr(args, "execute", False))
     ns.python_bin = str(getattr(args, "python_bin", "") or "")
-    ns.legacy_root = getattr(args, "legacy_root", None)
+    ns.workspace_root = getattr(args, "workspace_root", None) or getattr(args, "root", None)
     ns.variant = step.variant
     ns.methods = step.methods
     ns.table = ""
@@ -140,7 +140,7 @@ def _artifact_backed_reuse_results(step: dict[str, Any]) -> list[dict[str, Any]]
             "skipped": True,
             "reason": "artifact-backed reuse",
         }
-        for item in step.get("backend_commands", [])
+        for item in step.get("_execution_commands", [])
         if isinstance(item, dict)
     ]
 
@@ -161,7 +161,7 @@ def execute_workflow_plan(plan: dict[str, Any]) -> list[dict[str, Any]]:
                 "returncode": 0,
                 "elapsed_seconds": round(time.time() - started, 3),
                 "artifact_backed_reuse": artifact_backed_reuse,
-                "backend_results": execution_results,
+                "execution_results": execution_results,
             }
         )
     return results
