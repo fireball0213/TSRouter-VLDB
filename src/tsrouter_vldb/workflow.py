@@ -62,7 +62,7 @@ def _namespace_for_step(step: WorkflowStep, args: Any) -> Any:
 
     ns = Namespace()
     ns.action = step.action
-    ns.stage = step.stage
+    ns.stage = int(getattr(args, "stage", step.stage) or step.stage)
     ns.reuse = _reuse_mode(args)
     ns.execute = bool(getattr(args, "execute", False))
     ns.python_bin = str(getattr(args, "python_bin", "") or "")

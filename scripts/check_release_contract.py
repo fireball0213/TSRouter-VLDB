@@ -194,6 +194,7 @@ def check_reuse_levels() -> list[dict[str, Any]]:
     route_rebuilt = command_plan("route", "route")
     route_args = [argv_pairs(list(item["argv"])) for item in route_rebuilt]
     tsfm_reused = command_plan("tsfm", "core")
+    insert_rebuilt = command_plan("insert", "core")
     baseline_reused = command_plan("baselines", "core")
     return [
         result("reuse:route_skips_profile", all(item.get("skip_saved") for item in profile_reused)),
@@ -208,6 +209,7 @@ def check_reuse_levels() -> list[dict[str, Any]]:
             all(args.get("--route-cache-only") == "True" for args in route_args),
         ),
         result("reuse:core_skips_tsfm", all(item.get("skip_saved") for item in tsfm_reused)),
+        result("reuse:core_rebuilds_insert", all(not item.get("skip_saved") for item in insert_rebuilt)),
         result("reuse:core_skips_baselines", all(item.get("skip_saved") for item in baseline_reused)),
     ]
 

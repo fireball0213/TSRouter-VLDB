@@ -67,7 +67,7 @@ REUSE_MODES = PUBLIC_REUSE_MODES
 REUSE_SKIPPED_COMMANDS = {
     "results": {"tsfm", "profile", "route", "insert", "baselines", "summary"},
     "route": {"tsfm", "profile", "insert", "baselines"},
-    "core": {"tsfm", "insert", "baselines"},
+    "core": {"tsfm", "baselines"},
 }
 REUSE_ARTIFACT_BUNDLES = {
     "results": (
@@ -595,29 +595,38 @@ def _insert_commands(
     cwd: Path,
     skip_saved: bool,
 ) -> list[ExecutionCommand]:
-    start = int(getattr(args, "start_stage", None) or max(3, int(getattr(args, "stage", 20)) - 1))
-    end = int(getattr(args, "end_stage", None) or int(getattr(args, "stage", start + 1)))
-    if end <= start:
-        end = start + 1
+    explicit_start = getattr(args, "start_stage", None)
+    explicit_end = getattr(args, "end_stage", None)
+    if explicit_start is None and explicit_end is None:
+        stages = [int(getattr(args, "stage", 20) or 20)]
+    else:
+        start = int(explicit_start if explicit_start is not None else explicit_end)
+        end = int(explicit_end if explicit_end is not None else explicit_start)
+        if end < start:
+            raise ExecutionPlanError("end-stage must be greater than or equal to start-stage")
+        stages = list(range(start, end + 1))
     commands: list[ExecutionCommand] = []
     raw_variant = str(getattr(args, "variant", "") or "main,fast")
-    for variant in _variants(raw_variant):
-        command = _capability_index_command(
-            _profile_for_variant(variant),
-            python_bin=python_bin,
-            cwd=cwd,
-            skip_saved=skip_saved,
-        )
-        command.metadata.update(
-            {
-                "insert_stage_start": start,
-                "insert_stage_end": end,
-                "maintenance_log": "results_csv/TSRouter/Model_zoo_repr/insert_timing.csv",
-                "insert_source": "capability-index refresh",
-                "variant": variant,
-            }
-        )
-        commands.append(command)
+    for stage in stages:
+        for variant in _variants(raw_variant):
+            command = _capability_index_command(
+                _profile_for_variant(variant),
+                python_bin=python_bin,
+                cwd=cwd,
+                skip_saved=skip_saved,
+                stage=stage,
+                quick_test=bool(getattr(args, "quick_test", False)),
+            )
+            command = replace(command, operation=f"insert_index_{variant}")
+            command.metadata.update(
+                {
+                    "insert_stage": stage,
+                    "maintenance_log": "results_csv/TSRouter/Model_zoo_repr/insert_timing.csv",
+                    "insert_source": "capability-index refresh",
+                    "variant": variant,
+                }
+            )
+            commands.append(command)
     return commands
 
 
@@ -930,6 +939,8 @@ def build_release_command_plan(command: str, args: Any) -> dict[str, object]:
                     python_bin=python_bin,
                     cwd=cwd,
                     skip_saved=skip_saved,
+                    stage=stage,
+                    quick_test=quick_test,
                 )
             )
     elif command == "route":
@@ -941,6 +952,7 @@ def build_release_command_plan(command: str, args: Any) -> dict[str, object]:
                     cwd=cwd,
                     skip_saved=skip_saved,
                     stage=stage,
+                    only_stage=True,
                     use_cached_task_samples=reuse_task_cache(reuse),
                     cache_only=reuse == "route",
                 )

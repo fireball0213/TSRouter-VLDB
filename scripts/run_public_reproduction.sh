@@ -18,6 +18,7 @@ REPO_ID="${TSROUTER_VLDB_HF_REPO:-}"
 CHECKPOINT_ROOT="${TSROUTER_CHECKPOINT_ROOT:-}"
 DEVICES=""
 QUICK_TEST="false"
+STAGE="20"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -44,6 +45,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --reuse)
       REUSE_MODE="$2"
+      shift 2
+      ;;
+    --stage)
+      STAGE="$2"
       shift 2
       ;;
     --log-dir)
@@ -154,6 +159,7 @@ echo "artifact root: $ARTIFACT_ROOT"
 echo "artifact group: $GROUP"
 echo "workflow mode: $WORKFLOW_MODE"
 echo "reuse mode: $REUSE_MODE"
+echo "stage: $STAGE"
 echo "checkpoint root: $CHECKPOINT_ROOT"
 if [[ -n "$DEVICES" ]]; then
   echo "devices: $DEVICES"
@@ -202,7 +208,7 @@ run_step "7/8 Check extracted artifacts" "$LOG_DIR/07_artifact_contents.json" \
 
 WORKFLOW_LOG="$LOG_DIR/08_workflow_${WORKFLOW_MODE}.json"
 PROGRESS_LOG="$LOG_DIR/08_workflow_${WORKFLOW_MODE}.progress.log"
-WORKFLOW_ARGS=(workflow run --mode "$WORKFLOW_MODE" --reuse "$REUSE_MODE" --workspace-root "$RUN_ROOT" --python-bin "$PYTHON_BIN" --execute)
+WORKFLOW_ARGS=(workflow run --mode "$WORKFLOW_MODE" --stage "$STAGE" --reuse "$REUSE_MODE" --workspace-root "$RUN_ROOT" --python-bin "$PYTHON_BIN" --execute)
 if [[ -n "$DEVICES" ]]; then
   WORKFLOW_ARGS+=(--devices "$DEVICES")
 fi

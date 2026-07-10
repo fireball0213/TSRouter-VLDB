@@ -165,6 +165,7 @@ def build_parser() -> argparse.ArgumentParser:
     for action in ("run", "check"):
         workflow_parser = workflow_subparsers.add_parser(action)
         workflow_parser.add_argument("--mode", choices=("fast", "baselines"), default="fast")
+        workflow_parser.add_argument("--stage", type=int, default=20)
         workflow_parser.add_argument(
             "--reuse",
             default="results",
