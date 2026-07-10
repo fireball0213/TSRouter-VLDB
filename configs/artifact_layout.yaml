@@ -6,21 +6,32 @@ local_artifact_root_env: "TSROUTER_VLDB_ARTIFACT_ROOT"
 hf_repo_env: "TSROUTER_VLDB_HF_REPO"
 
 groups:
+  results:
+    description: "Released result records and table inputs."
+    bundles:
+      - "tsfm_results_stage20"
+      - "tsrouter_core_stage20"
+      - "baselines_stage20"
+      - "tables_figures_stage20"
+  route:
+    description: "Published capability representations, request samples, and TSFM metrics for route validation."
+    bundles:
+      - "tsfm_results_stage20"
+      - "tsrouter_core_stage20"
+      - "task_cache_stage20"
+  core:
+    description: "Profile inputs, TSFM metrics, and request samples for rebuilding the TSRouter core."
+    bundles:
+      - "profile_sources"
+      - "tsfm_results_stage20"
+      - "task_cache_stage20"
   all:
-    description: "All public reproduction artifacts."
+    description: "Complete public artifact collection."
     bundles:
       - "profile_sources"
       - "tsfm_results_stage20"
       - "tsrouter_core_stage20"
       - "baselines_stage20"
-      - "task_cache_stage20"
-      - "tables_figures_stage20"
-  core:
-    description: "Artifacts required for TSFM reuse, PROFILE reuse, TSRouter-main, TSRouter-fast, and table refresh."
-    bundles:
-      - "profile_sources"
-      - "tsfm_results_stage20"
-      - "tsrouter_core_stage20"
       - "task_cache_stage20"
       - "tables_figures_stage20"
   baselines:

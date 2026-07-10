@@ -7,7 +7,7 @@ from typing import Any
 from .artifacts import check_artifacts
 from .checks import check_layout
 from .commands import COMMAND_ARTIFACT_GROUPS
-from .execution import execute_release_command_plan
+from .execution import command_reuses_outputs, execute_release_command_plan, normalize_reuse_mode
 from .stages import build_stage_plan
 
 
@@ -30,15 +30,6 @@ FAST_STEPS = (
     WorkflowStep("summary", "tables", write=True),
 )
 
-FULL_STEPS = (
-    WorkflowStep("tsfm", "run"),
-    WorkflowStep("profile", "run", variant="main,fast"),
-    WorkflowStep("route", "run", variant="main,fast"),
-    WorkflowStep("insert", "run-all", start_stage=3, end_stage=20, variant="main,fast"),
-    WorkflowStep("baselines", "run", methods="all"),
-    WorkflowStep("summary", "tables", write=True),
-)
-
 BASELINE_STEPS = (
     WorkflowStep("baselines", "run", methods="all"),
     WorkflowStep("summary", "tables", write=True),
@@ -47,13 +38,22 @@ BASELINE_STEPS = (
 
 WORKFLOWS = {
     "fast": FAST_STEPS,
-    "full": FULL_STEPS,
     "baselines": BASELINE_STEPS,
 }
 
 
 class WorkflowError(RuntimeError):
     pass
+
+
+def _reuse_mode(args: Any) -> str:
+    return normalize_reuse_mode(getattr(args, "reuse", "results"))
+
+
+def _workflow_artifact_group(mode: str, reuse: str) -> str:
+    if reuse in {"results", "route", "core"}:
+        return reuse
+    return "results"
 
 
 def _namespace_for_step(step: WorkflowStep, args: Any) -> Any:
@@ -63,10 +63,12 @@ def _namespace_for_step(step: WorkflowStep, args: Any) -> Any:
     ns = Namespace()
     ns.action = step.action
     ns.stage = step.stage
-    ns.reuse = str(getattr(args, "reuse", "all") or "all")
+    ns.reuse = _reuse_mode(args)
     ns.execute = bool(getattr(args, "execute", False))
     ns.python_bin = str(getattr(args, "python_bin", "") or "")
     ns.workspace_root = getattr(args, "workspace_root", None) or getattr(args, "root", None)
+    ns.devices = str(getattr(args, "devices", "") or "")
+    ns.quick_test = bool(getattr(args, "quick_test", False))
     ns.variant = step.variant
     ns.methods = step.methods
     ns.table = ""
@@ -80,6 +82,7 @@ def build_workflow_plan(args: Any) -> dict[str, Any]:
     mode = str(getattr(args, "mode", "fast") or "fast")
     if mode not in WORKFLOWS:
         raise WorkflowError(f"unknown workflow mode: {mode}")
+    reuse = _reuse_mode(args)
 
     checks = []
     if bool(getattr(args, "check_layout", True)):
@@ -92,7 +95,7 @@ def build_workflow_plan(args: Any) -> dict[str, Any]:
             }
         )
     if bool(getattr(args, "check_artifacts", True)):
-        artifact_group = "all" if mode in {"full", "baselines"} else "core"
+        artifact_group = _workflow_artifact_group(mode, reuse)
         checks.append(
             {
                 "name": "artifacts",
@@ -108,29 +111,19 @@ def build_workflow_plan(args: Any) -> dict[str, Any]:
     return {
         "workflow": mode,
         "execution_mode": "execute" if bool(getattr(args, "execute", False)) else "plan",
-        "reuse": str(getattr(args, "reuse", "all") or "all"),
+        "reuse": reuse,
+        "quick_test": bool(getattr(args, "quick_test", False)),
+        "devices": str(getattr(args, "devices", "") or ""),
         "checks": checks,
         "steps": step_plans,
     }
 
 
 def _artifact_backed_reuse_results(step: dict[str, Any]) -> list[dict[str, Any]] | None:
-    reuse = str(step.get("reuse", "") or "").strip().lower()
-    if reuse != "all":
-        return None
+    reuse = normalize_reuse_mode(str(step.get("reuse", "results") or "results"))
 
     command = str(step.get("command", "") or "")
-    bundles = tuple(str(item) for item in step.get("artifact_groups", ()) or COMMAND_ARTIFACT_GROUPS.get(command, ()))
-    if not bundles:
-        return None
-
-    artifact_check = check_artifacts(
-        group=f"{command}_required",
-        bundle_names=bundles,
-        check_archives=False,
-        check_contents=True,
-    )
-    if not artifact_check["ok"]:
+    if not command_reuses_outputs(reuse, command):
         return None
 
     return [
@@ -138,7 +131,7 @@ def _artifact_backed_reuse_results(step: dict[str, Any]) -> list[dict[str, Any]]
             "operation": item.get("operation", ""),
             "returncode": 0,
             "skipped": True,
-            "reason": "artifact-backed reuse",
+            "reason": f"reuse level: {reuse}",
         }
         for item in step.get("_execution_commands", [])
         if isinstance(item, dict)
@@ -159,7 +152,7 @@ def execute_workflow_plan(plan: dict[str, Any]) -> list[dict[str, Any]]:
                 "command": step.get("command"),
                 "action": step.get("action"),
                 "returncode": 0,
-                "elapsed_seconds": round(time.time() - started, 3),
+                "workflow_wall_seconds": round(time.time() - started, 3),
                 "artifact_backed_reuse": artifact_backed_reuse,
                 "execution_results": execution_results,
             }

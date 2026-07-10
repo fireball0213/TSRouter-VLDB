@@ -1,91 +1,159 @@
 # TSRouter-VLDB
 
-TSRouter-VLDB contains the public artifact package and reproduction tools for TSRouter and TSFM-ZooBench.
+This repository contains the public implementation and reproduction package for TSRouter and TSFM-ZooBench.
 
-TSFM-ZooBench is a benchmark for studying time-series foundation model service when the available model zoo grows over time. It records model quality, runtime, and routing evidence so that a serving method can be evaluated under realistic model-arrival and request workloads.
+## Paper
 
-TSRouter is a training-free routing method for this setting. It profiles the capability of available TSFMs, routes each forecasting request to a suitable model, and updates the routing evidence when new models or results are added. This repository focuses on the released paper artifacts: integrity checks, artifact-backed reproduction, and table previews for the main experimental results.
+The arXiv preprint link and citable BibTeX will be added here immediately after arXiv assigns an identifier. Until then, this repository does not claim that the work has been accepted or published by VLDB.
 
-Large artifacts are distributed through a Hugging Face Dataset. GitHub contains source code, small configuration files, scripts, and integrity checks.
+<!-- ARXIV_RELEASE_BLOCK
+[![arXiv](https://img.shields.io/badge/arXiv-ARXIV_ID-b31b1b.svg)](https://arxiv.org/abs/ARXIV_ID)
 
-Artifact repository: https://huggingface.co/datasets/LAMDA-shihn/tsrouter-v1-artifacts
+> **TSRouter: An Incremental Capability Index for Growing Time-Series Foundation Model Zoos**
+> Hao-Nan Shi, Ting-Ji Huang, Lu Han, De-Chuan Zhan, and Han-Jia Ye. [arXiv preprint](https://arxiv.org/abs/ARXIV_ID).
+
+```bibtex
+@article{shi2026tsrouter,
+  title={TSRouter: An Incremental Capability Index for Growing Time-Series Foundation Model Zoos},
+  author={Shi, Hao-Nan and Huang, Ting-Ji and Han, Lu and Zhan, De-Chuan and Ye, Han-Jia},
+  journal={arXiv preprint arXiv:ARXIV_ID},
+  year={2026}
+}
+```
+ARXIV_RELEASE_BLOCK -->
+
+TSFM-ZooBench evaluates time-series foundation models in a service setting where the available model zoo grows over time. It uses the public [GIFT-Eval benchmark](https://huggingface.co/datasets/Salesforce/GiftEval) as the forecasting workload and records model quality, runtime, and routing evidence for model-selection experiments.
+
+TSRouter is a training-free routing method for this setting. It profiles the capability of available TSFMs, routes forecasting requests to a suitable model, and updates the routing evidence as new models or results are added. The release includes the TSRouter implementation, the paper baseline implementations, workflow commands, and optional released artifacts for fast validation.
+
+Released artifacts are hosted as a Hugging Face Dataset:
+
+```text
+LAMDA-shihn/tsrouter-v1-artifacts
+```
+
+The artifact repository stores compact profile inputs and optional intermediate results. It does not mirror GIFT-Eval; the benchmark is loaded from its public Hugging Face repository.
 
 ## Setup
 
-Install the lightweight reproduction dependencies:
+Clone the repository and enter its root directory:
 
 ```bash
-python -m pip install -r TSRouter-VLDB/requirements_core.txt
+git clone https://github.com/fireball0213/TSRouter-VLDB.git
+cd TSRouter-VLDB
 ```
 
-Set the Hugging Face Dataset repository when artifacts are not already present locally:
+Install the lightweight dependencies for artifact checks and table preview:
+
+```bash
+python -m pip install -r requirements_core.txt
+```
+
+Install the method dependencies for TSFM and selector components:
+
+```bash
+python -m pip install -r requirements_method.txt
+```
+
+The source tree includes TSFM evaluation and TS2Vec training components. The released workflows use the appropriate published inputs and results for their selected reproduction level. When a workflow requires local checkpoints or GIFT-Eval, its preflight check reports the required location.
+
+On a connected machine, prefetch the official model checkpoints and benchmark:
+
+```bash
+python scripts/fetch_model_weights.py --out "$PWD/checkpoints"
+python scripts/fetch_gifteval.py --out "$PWD/data/gifteval"
+```
+
+Use `--model <family_variant>` with `fetch_model_weights.py` to retrieve selected checkpoints. The script records the downloaded upstream revisions in `checkpoints/checkpoint_manifest.json`. Access controls and license terms of each upstream model repository remain applicable.
+
+Set the artifact repository:
 
 ```bash
 export TSROUTER_VLDB_HF_REPO="LAMDA-shihn/tsrouter-v1-artifacts"
 ```
 
-Inspect, download, and verify the artifact bundles:
+## Reproduction Levels
+
+The `--reuse` level selects a reproducible scope and its required inputs:
+
+| Level | Recomputed work | Required downloads |
+| --- | --- | --- |
+| `results` | Artifact validation and table preview | TSRouter artifact repository only |
+| `route` | TSRouter main and fast routing from published capability representations and request-sample caches | TSRouter artifact repository only |
+| `core` | TSRouter capability profiling followed by main and fast routing | TSRouter artifact repository, [GIFT-Eval](https://huggingface.co/datasets/Salesforce/GiftEval), and the official TSFM checkpoints |
+
+The `results` level is the fastest way to inspect the released paper outputs. The `route` level is the recommended quick method check: it reuses published capability representations, pooled inputs, request-sample caches, and TSFM metric records, then recomputes the routing decisions without loading benchmark data or model checkpoints. The `core` level rebuilds the capability representations with the public benchmark and official checkpoints, while reusing the released TSFM metric records and request-sample cache.
+
+All levels write JSON logs to `reproduction_logs/`. Commands that produce tables write them to `results_csv/TSRouter/vldb/tables/`.
+
+## Results Check
+
+To validate the released result package and preview the tables:
 
 ```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts plan --group all
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts pull --repo-id "$TSROUTER_VLDB_HF_REPO" --group all
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts check --group all --skip-contents
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts extract --group all
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py artifacts check --group all --skip-archives
-```
-
-## Reproduction
-
-Run the public artifact-backed workflow:
-
-```bash
-bash TSRouter-VLDB/scripts/run_public_reproduction.sh \
+bash scripts/run_public_reproduction.sh \
   --root "$PWD" \
   --python-bin "$(which python)" \
-  --mode full \
-  --reuse all
+  --reuse results \
+  --pull \
+  --repo-id "$TSROUTER_VLDB_HF_REPO"
 ```
 
-If the bundles are not already present under `TSRouter-VLDB/`, add:
+## Route Check
+
+To rerun the TSRouter main and fast route decisions from published representations and request samples:
 
 ```bash
---pull --repo-id "$TSROUTER_VLDB_HF_REPO"
+bash scripts/run_public_reproduction.sh \
+  --root "$PWD" \
+  --python-bin "$(which python)" \
+  --reuse route \
+  --pull \
+  --repo-id "$TSROUTER_VLDB_HF_REPO"
 ```
 
-The script verifies the release layout, extracts the bundles, executes the public workflow with artifact reuse, and prints the released table previews. JSON logs are written to `TSRouter-VLDB/reproduction_logs/`.
+## Core Check
+
+Download the public benchmark and official checkpoints on a connected machine:
+
+```bash
+python scripts/fetch_gifteval.py --out "$PWD/data/gifteval"
+python scripts/fetch_model_weights.py --out "$PWD/checkpoints"
+```
+
+Then rebuild TSRouter capability representations and route decisions:
+
+```bash
+bash scripts/run_public_reproduction.sh \
+  --root "$PWD" \
+  --checkpoint-root "$PWD/checkpoints" \
+  --python-bin "$(which python)" \
+  --reuse core \
+  --pull \
+  --repo-id "$TSROUTER_VLDB_HF_REPO"
+```
 
 ## Command Groups
 
-The same workflow can be inspected or run one command group at a time:
+The workflow can also be run one command group at a time:
 
 ```bash
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py tsfm run --stage 20 --reuse all
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py profile run --stage 20 --variant main,fast --reuse all
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py route run --stage 20 --variant main,fast --reuse all
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py insert run-all --start-stage 3 --end-stage 20 --variant main,fast --reuse all
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py baselines run --stage 20 --methods all --reuse all
-python TSRouter-VLDB/src/cli/tsrouter_vldb.py summary tables --stage 20 --reuse all --write
+python src/cli/tsrouter_vldb.py profile run --stage 20 --variant main,fast --reuse core --execute --workspace-root "$PWD" --python-bin "$(which python)"
+python src/cli/tsrouter_vldb.py route run --stage 20 --variant main,fast --reuse route --execute --workspace-root "$PWD" --python-bin "$(which python)"
+python src/cli/tsrouter_vldb.py summary tables --stage 20 --reuse results --execute --workspace-root "$PWD" --python-bin "$(which python)"
 ```
 
-Commands print a compact operation plan by default. Add `--execute` to run the selected group.
-
-## Reuse Modes
-
-`--reuse all` is the supported public reproduction mode for the released artifact package. It checks the downloaded artifacts and skips expensive recomputation while still validating the workflow and result tables.
-
-`--reuse none` runs the selected command group without artifact-backed skip. It requires the full local experiment environment and raw inputs used by the paper experiments, which are not part of this lightweight artifact package.
-
-In the public artifact package, the supported result-table workflow is artifact-backed validation and preview. Non-reuse runs are intended for complete experiment workspaces maintained separately from this release package.
+Use `--reuse results` to validate released outputs, `--reuse route` for cache-driven route checks, and `--reuse core` when rebuilding the capability profile.
 
 ## Release Checks
 
 Before publishing a code update, run:
 
 ```bash
-python TSRouter-VLDB/scripts/check_release_contract.py
-python TSRouter-VLDB/scripts/audit_public_surface.py
-python -m compileall TSRouter-VLDB/src TSRouter-VLDB/scripts
-bash -n TSRouter-VLDB/scripts/run_public_reproduction.sh
+python scripts/check_release_contract.py
+python scripts/audit_public_surface.py
+python -m compileall src scripts
+bash -n scripts/run_public_reproduction.sh
 ```
 
-The artifact layout is defined in `configs/artifact_layout.yaml`; the public execution contract is defined in `configs/execution_contract.yaml`.
+The artifact layout is defined in `configs/artifact_layout.yaml`; the public workflow profile is defined in `configs/paper_run_profiles.yaml`.

@@ -43,10 +43,16 @@ def _print_json(data: Any) -> None:
 
 def _add_stage_reuse(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--stage", type=int, default=20)
-    parser.add_argument("--reuse", default="all")
+    parser.add_argument(
+        "--reuse",
+        default="results",
+        help="Reuse level: results, route, or core.",
+    )
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--python-bin", default=sys.executable)
     parser.add_argument("--workspace-root")
+    parser.add_argument("--devices", default="", help="Comma-separated GPU IDs used for model-parallel execution.")
+    parser.add_argument("--quick-test", dest="quick_test", action="store_true", help="Use the compact benchmark subset.")
     parser.add_argument("--" + "leg" + "acy" + "-root", dest="workspace_root", help=argparse.SUPPRESS)
 
 
@@ -158,11 +164,17 @@ def build_parser() -> argparse.ArgumentParser:
     workflow_subparsers = workflow.add_subparsers(dest="workflow_action", required=True)
     for action in ("run", "check"):
         workflow_parser = workflow_subparsers.add_parser(action)
-        workflow_parser.add_argument("--mode", choices=("fast", "full", "baselines"), default="fast")
-        workflow_parser.add_argument("--reuse", default="all")
+        workflow_parser.add_argument("--mode", choices=("fast", "baselines"), default="fast")
+        workflow_parser.add_argument(
+            "--reuse",
+            default="results",
+            help="Reuse level: results, route, or core.",
+        )
         workflow_parser.add_argument("--execute", action="store_true")
         workflow_parser.add_argument("--python-bin", default=sys.executable)
         workflow_parser.add_argument("--workspace-root")
+        workflow_parser.add_argument("--devices", default="", help="Comma-separated GPU IDs used for model-parallel execution.")
+        workflow_parser.add_argument("--quick-test", dest="quick_test", action="store_true", help="Use the compact benchmark subset.")
         workflow_parser.add_argument("--" + "leg" + "acy" + "-root", dest="workspace_root", help=argparse.SUPPRESS)
         workflow_parser.add_argument("--no-layout-check", dest="check_layout", action="store_false")
         workflow_parser.add_argument("--no-artifact-check", dest="check_artifacts", action="store_false")

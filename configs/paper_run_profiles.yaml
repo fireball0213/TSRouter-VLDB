@@ -68,13 +68,9 @@ baseline_methods:
     - "AutoXPCR"
     - "SimpleTS"
     - "Profile-probe-M"
-    - "Profile-probe-C"
     - "Random"
     - "Recent"
     - "Task-probe"
-    - "MetaFeature-GBDT"
-    - "MetaFeature-MLP"
-    - "Task-Oracle"
   references:
     - "Current_best-M"
     - "Current_best-C"

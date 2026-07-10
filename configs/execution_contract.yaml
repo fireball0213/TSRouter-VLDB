@@ -12,15 +12,10 @@ variant_policy:
     - "derived_route_profile_id"
 
 public_command_mapping:
-  tsfm:
-    purpose: "Run or validate cached TSFM zero-shot results."
-    artifact_groups:
-      - "tsfm_results_stage20"
   profile:
-    purpose: "Build or validate PROFILE artifacts."
+    purpose: "Build or validate TSRouter capability representations."
     artifact_groups:
       - "profile_sources"
-      - "tsrouter_core_stage20"
   route:
     purpose: "Run or validate TSRouter-main and TSRouter-fast results."
     artifact_groups:
@@ -48,9 +43,32 @@ public_command_mapping:
       - "tables_figures_stage20"
 
 public_reuse_modes:
-  all:
-    description: "Use existing local or downloaded artifacts when available."
-  none:
-    description: "Run the selected command group without artifact-backed skip."
-  partial:
-    description: "Comma-separated artifact groups; command planning reports which groups are reused."
+  results:
+    artifact_group: "results"
+    requirements:
+      released_artifacts:
+        - "TSFM result records"
+        - "TSRouter and baseline result records"
+        - "table inputs"
+      external_downloads: []
+    description: "Validate released results and tables."
+  route:
+    artifact_group: "route"
+    requirements:
+      released_artifacts:
+        - "published capability representations"
+        - "request-sample cache"
+        - "TSFM metric records"
+      external_downloads: []
+    description: "Rerun TSRouter routing from published representations and request samples."
+  core:
+    artifact_group: "core"
+    requirements:
+      released_artifacts:
+        - "profile source inputs"
+        - "request-sample cache"
+        - "TSFM metric records"
+      external_downloads:
+        - "Salesforce/GiftEval"
+        - "official TSFM checkpoints"
+    description: "Rebuild TSRouter capability representations and routing with public data and official checkpoints."

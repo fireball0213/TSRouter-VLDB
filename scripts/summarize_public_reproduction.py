@@ -82,7 +82,7 @@ def workflow_rows(path: Path) -> list[dict[str, object]]:
                 "artifact_reuse": step.get("artifact_backed_reuse"),
                 "ops": len(execution_results),
                 "all_skipped": bool(execution_results) and all(item.get("skipped") for item in execution_results),
-                "elapsed_s": step.get("elapsed_seconds"),
+                "wall_elapsed_s": step.get("workflow_wall_seconds"),
             }
         )
     return rows

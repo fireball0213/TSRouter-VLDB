@@ -53,7 +53,7 @@ def route_plan(variant: str) -> dict[str, Any]:
     args = SimpleNamespace(
         action="run",
         stage=20,
-        reuse="all",
+        reuse="results",
         execute=False,
         python_bin=sys.executable,
         workspace_root=str(PROJECT_ROOT),
@@ -65,6 +65,26 @@ def route_plan(variant: str) -> dict[str, Any]:
         write=False,
     )
     return build_release_command_plan("route", args)["_execution_commands"][0]
+
+
+def command_plan(command: str, reuse: str, *, variant: str = "main,fast") -> list[dict[str, Any]]:
+    args = SimpleNamespace(
+        action="run",
+        stage=20,
+        reuse=reuse,
+        execute=False,
+        python_bin=sys.executable,
+        workspace_root=str(PROJECT_ROOT),
+        variant=variant,
+        methods="all",
+        table="",
+        start_stage=None,
+        end_stage=None,
+        write=False,
+        devices="",
+        quick_test=False,
+    )
+    return build_release_command_plan(command, args)["_execution_commands"]
 
 
 def check_release_profiles(profiles: dict[str, Any]) -> list[dict[str, Any]]:
@@ -109,6 +129,89 @@ def check_route_plans(contract: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
+def check_method_source_files() -> list[dict[str, Any]]:
+    required = (
+        "src/cli/run_model_zoo.py",
+        "src/cli/check_selector.py",
+        "src/model_zoo/base_model.py",
+        "src/selector/TSRouter_Select/sampled_repr_set.py",
+        "src/selector/TSRouter_Select/model_zoo_repr.py",
+        "src/encoder/base_encoder.py",
+        "src/encoder/baseline/RandomTS_encoder.py",
+        "src/encoder/baseline/TS2Vec_encoder.py",
+        "src/encoder/baseline/random_stats_features.py",
+    )
+    return [
+        result(f"method_source:{path}", (RELEASE_ROOT / path).is_file())
+        for path in required
+    ]
+
+
+def check_baseline_scope(profiles: dict[str, Any]) -> list[dict[str, Any]]:
+    configured = profiles.get("baseline_methods", {}).get("deployable", [])
+    expected = {
+        "TSRouter-main",
+        "TSRouter-fast",
+        "AutoForecast",
+        "AutoXPCR",
+        "SimpleTS",
+        "Profile-probe-M",
+        "Random",
+        "Recent",
+        "Task-probe",
+    }
+    args = SimpleNamespace(
+        action="run",
+        stage=20,
+        reuse="core",
+        execute=False,
+        python_bin=sys.executable,
+        workspace_root=str(PROJECT_ROOT),
+        variant="main,fast",
+        methods="all",
+        table="",
+        start_stage=None,
+        end_stage=None,
+        write=False,
+        devices="",
+        quick_test=False,
+    )
+    plan = build_release_command_plan("baselines", args)
+    planned = {
+        str(command.get("metadata", {}).get("baseline_method"))
+        for command in plan.get("_execution_commands", [])
+        if command.get("metadata", {}).get("baseline_method")
+    }
+    return [
+        result("baseline_scope:configured", set(configured) == expected),
+        result("baseline_scope:planned", planned == expected - {"TSRouter-main", "TSRouter-fast"}),
+    ]
+
+
+def check_reuse_levels() -> list[dict[str, Any]]:
+    profile_reused = command_plan("profile", "route")
+    profile_rebuilt = command_plan("profile", "core")
+    route_rebuilt = command_plan("route", "route")
+    route_args = [argv_pairs(list(item["argv"])) for item in route_rebuilt]
+    tsfm_reused = command_plan("tsfm", "core")
+    baseline_reused = command_plan("baselines", "core")
+    return [
+        result("reuse:route_skips_profile", all(item.get("skip_saved") for item in profile_reused)),
+        result("reuse:core_rebuilds_profile", all(not item.get("skip_saved") for item in profile_rebuilt)),
+        result("reuse:route_rebuilds_route", all(not item.get("skip_saved") for item in route_rebuilt)),
+        result(
+            "reuse:route_uses_task_cache",
+            all(args.get("--vldb_fast_sample") == "True" for args in route_args),
+        ),
+        result(
+            "reuse:route_uses_cache_only_metadata",
+            all(args.get("--route-cache-only") == "True" for args in route_args),
+        ),
+        result("reuse:core_skips_tsfm", all(item.get("skip_saved") for item in tsfm_reused)),
+        result("reuse:core_skips_baselines", all(item.get("skip_saved") for item in baseline_reused)),
+    ]
+
+
 def main() -> int:
     profiles = read_yaml(RELEASE_ROOT / "configs" / "paper_run_profiles.yaml")
     contract = read_yaml(RELEASE_ROOT / "configs" / "execution_contract.yaml")
@@ -116,6 +219,9 @@ def main() -> int:
     checks = []
     checks.extend(check_release_profiles(profiles))
     checks.extend(check_route_plans(contract))
+    checks.extend(check_method_source_files())
+    checks.extend(check_baseline_scope(profiles))
+    checks.extend(check_reuse_levels())
 
     payload = {
         "ok": all(item["ok"] for item in checks),
