@@ -74,7 +74,7 @@ conda activate tsrouter-v1
 python scripts/check_environment.py --require-gpu --strict
 ```
 
-The validated configuration uses Python 3.11.15, PyTorch 2.5.1 with CUDA 12.4, NVIDIA driver 560.35.03, and NVIDIA RTX 3090 GPUs with 24 GiB memory. The `results` and `route` levels do not require a GPU; the `core` level requires a CUDA-capable environment.
+The validated configuration uses Python 3.11.15, PyTorch 2.5.1, and CUDA 12.4. The `results` and `route` levels do not require a GPU; the `core` level requires a CUDA-capable environment.
 
 To install only the lightweight dependencies for artifact checks and table preview:
 
