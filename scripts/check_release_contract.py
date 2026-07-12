@@ -225,9 +225,10 @@ def main() -> int:
     checks.extend(check_baseline_scope(profiles))
     checks.extend(check_reuse_levels())
     release_id = (RELEASE_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    package_version = release_id.removeprefix("v")
     pyproject = (RELEASE_ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    checks.append(result("release:version_file", release_id == "v1.0", release_id))
-    checks.append(result("release:package_version", 'version = "1.0"' in pyproject, "1.0"))
+    checks.append(result("release:version_file", release_id.startswith("v") and bool(package_version), release_id))
+    checks.append(result("release:package_version", f'version = "{package_version}"' in pyproject, package_version))
 
     payload = {
         "ok": all(item["ok"] for item in checks),

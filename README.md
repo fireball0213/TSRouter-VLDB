@@ -2,7 +2,7 @@
 
 This repository contains the public implementation and reproduction package for TSRouter and TSFM-ZooBench.
 
-**Release:** `v1.0`
+**Release:** `v1.1`
 
 Time-series foundation models (TSFMs) are increasingly deployed as a shared model zoo rather than selected once for a fixed benchmark. In that setting, a forecasting service must select a model for each incoming request while the zoo grows and new model evidence becomes available. TSRouter addresses this problem with a capability index that represents model behavior across time-series contexts, enabling efficient request-level ranking without evaluating every candidate model for every request.
 
@@ -18,11 +18,11 @@ TSFM-ZooBench extends a standard forecasting workload into this evolving-service
 
 ![TSRouter problem setting: forecasting tasks arrive continuously, the available TSFM zoo grows over time, model winners are workload-dependent, and routing must balance quality, efficiency, and insertion cost.](assets/figures/fig1.png)
 
-*Figure 1: TSRouter is designed for request-level TSFM selection in a growing model zoo.*
+*Figure 1: Why quality-efficiency routing is needed in a growing TSFM zoo. A multi-tenant forecasting service receives heterogeneous time-series requests while the candidate TSFM repository expands over time. Release-ordered winner shares show that request ownership is distributed across models and shifts after new arrivals. Full-zoo forwarding and selector retraining become increasingly costly as the zoo grows, motivating adaptive routing that balances forecasting accuracy, serving latency, and INSERT maintenance time.*
 
 ![TSRouter architecture: PROFILE builds reusable capability profiles, ROUTE ranks models without online candidate forwarding, and INSERT refreshes affected index records when a model arrives.](assets/figures/fig2.png)
 
-*Figure 2: PROFILE, ROUTE, and INSERT in the TSRouter architecture.*
+*Figure 2: TSRouter system architecture. PROFILE builds metric-specific capability records on fixed probe anchors. ROUTE embeds observed request windows, retrieves winner anchors, and performs hierarchical rank fusion without online candidate forwarding. INSERT profiles only the incoming TSFM before refreshing affected winner-anchor records.*
 
 ## Artifacts
 
