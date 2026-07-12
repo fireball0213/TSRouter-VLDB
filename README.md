@@ -20,10 +20,6 @@ TSFM-ZooBench extends a standard forecasting workload into this evolving-service
 
 *Figure 1: Why quality-efficiency routing is needed in a growing TSFM zoo. A multi-tenant forecasting service receives heterogeneous time-series requests while the candidate TSFM repository expands over time. Release-ordered winner shares show that request ownership is distributed across models and shifts after new arrivals. Full-zoo forwarding and selector retraining become increasingly costly as the zoo grows, motivating adaptive routing that balances forecasting accuracy, serving latency, and INSERT maintenance time.*
 
-![TSRouter architecture: PROFILE builds reusable capability profiles, ROUTE ranks models without online candidate forwarding, and INSERT refreshes affected index records when a model arrives.](assets/figures/fig2.png)
-
-*Figure 2: TSRouter system architecture. PROFILE builds metric-specific capability records on fixed probe anchors. ROUTE embeds observed request windows, retrieves winner anchors, and performs hierarchical rank fusion without online candidate forwarding. INSERT profiles only the incoming TSFM before refreshing affected winner-anchor records.*
-
 ## Artifacts
 
 [**TSRouter-VLDB Artifacts on Hugging Face**](https://huggingface.co/datasets/LAMDA-shihn/tsrouter-v1-artifacts)
