@@ -24,26 +24,26 @@ The model zoo contains 20 registered TSFM variants ordered by public release dat
 
 | Stage | TSFM family | Abbreviation | Registered version / size | Release date |
 | ---: | --- | --- | --- | --- |
-| 1 | Moirai | `Moi.S` | [1.0-R-small](https://huggingface.co/Salesforce/moirai-1.0-R-small) | 2024-03-19 |
-| 2 | Moirai | `Moi.B` | [1.0-R-base](https://huggingface.co/Salesforce/moirai-1.0-R-base) | 2024-03-20 |
-| 3 | Moirai | `Moi.L` | [1.0-R-large](https://huggingface.co/Salesforce/moirai-1.0-R-large) | 2024-03-21 |
-| 4 | TimeMoE | `TMoE.50` | [50M](https://huggingface.co/Maple728/TimeMoE-50M) | 2024-09-21 |
-| 5 | Chronos | `Chr.bT` | [bolt-tiny](https://huggingface.co/amazon/chronos-bolt-tiny) | 2024-11-10 |
-| 6 | Chronos | `Chr.bM` | [bolt-mini](https://huggingface.co/amazon/chronos-bolt-mini) | 2024-11-11 |
-| 7 | Chronos | `Chr.bS` | [bolt-small](https://huggingface.co/amazon/chronos-bolt-small) | 2024-11-12 |
-| 8 | Chronos | `Chr.bB` | [bolt-base](https://huggingface.co/amazon/chronos-bolt-base) | 2024-11-13 |
-| 9 | Toto | `Toto` | [Toto-Open-Base-1.0](https://huggingface.co/Datadog/Toto-Open-Base-1.0) | 2025-05-06 |
-| 10 | Moirai 2 | `Moi2.S` | [2.0-R-small](https://huggingface.co/Salesforce/moirai-2.0-R-small) | 2025-08-06 |
-| 11 | FlowState | `Flo.r1` | [r1](https://huggingface.co/ibm-granite/granite-timeseries-flowstate-r1) | 2025-09-12 |
-| 12 | Kairos | `Kai.10` | [10M](https://huggingface.co/mldi-lab/Kairos_10m) | 2025-09-28 |
-| 13 | Kairos | `Kai.23` | [23M](https://huggingface.co/mldi-lab/Kairos_23m) | 2025-09-29 |
-| 14 | Kairos | `Kai.50` | [50M](https://huggingface.co/mldi-lab/Kairos_50m) | 2025-09-30 |
-| 15 | TimesFM | `TFM.25` | [2.5-200M](https://huggingface.co/google/timesfm-2.5-200m-pytorch) | 2025-10-01 |
-| 16 | TiRex | `TiRex` | [1.1](https://huggingface.co/NX-AI/TiRex-1.1-gifteval) | 2025-10-06 |
-| 17 | Chronos 2 | `Chr.2` | [base](https://huggingface.co/amazon/chronos-2) | 2025-10-30 |
-| 18 | PatchTST-FM | `PTS.FM` | [r1](https://huggingface.co/ibm-granite/granite-timeseries-patchtst-fm-r1) | 2026-03-18 |
-| 19 | Toto 2 | `Toto2.T` | [2.0-4M](https://huggingface.co/Datadog/Toto-2.0-4m) | 2026-04-14 |
-| 20 | Toto 2 | `Toto2.S` | [2.0-22M](https://huggingface.co/Datadog/Toto-2.0-22m) | 2026-04-15 |
+| 1 | Moirai | `Moi.S` | [1.0-R-small](https://huggingface.co/Salesforce/moirai-1.0-R-small) | 2024-03 |
+| 2 | Moirai | `Moi.B` | [1.0-R-base](https://huggingface.co/Salesforce/moirai-1.0-R-base) | 2024-03 |
+| 3 | Moirai | `Moi.L` | [1.0-R-large](https://huggingface.co/Salesforce/moirai-1.0-R-large) | 2024-03 |
+| 4 | TimeMoE | `TMoE.50` | [50M](https://huggingface.co/Maple728/TimeMoE-50M) | 2024-09 |
+| 5 | Chronos | `Chr.bT` | [bolt-tiny](https://huggingface.co/amazon/chronos-bolt-tiny) | 2024-11 |
+| 6 | Chronos | `Chr.bM` | [bolt-mini](https://huggingface.co/amazon/chronos-bolt-mini) | 2024-11 |
+| 7 | Chronos | `Chr.bS` | [bolt-small](https://huggingface.co/amazon/chronos-bolt-small) | 2024-11 |
+| 8 | Chronos | `Chr.bB` | [bolt-base](https://huggingface.co/amazon/chronos-bolt-base) | 2024-11 |
+| 9 | Toto | `Toto` | [Toto-Open-Base-1.0](https://huggingface.co/Datadog/Toto-Open-Base-1.0) | 2025-05 |
+| 10 | Moirai 2 | `Moi2.S` | [2.0-R-small](https://huggingface.co/Salesforce/moirai-2.0-R-small) | 2025-08 |
+| 11 | FlowState | `Flo.r1` | [r1](https://huggingface.co/ibm-granite/granite-timeseries-flowstate-r1) | 2025-09 |
+| 12 | Kairos | `Kai.10` | [10M](https://huggingface.co/mldi-lab/Kairos_10m) | 2025-09 |
+| 13 | Kairos | `Kai.23` | [23M](https://huggingface.co/mldi-lab/Kairos_23m) | 2025-09 |
+| 14 | Kairos | `Kai.50` | [50M](https://huggingface.co/mldi-lab/Kairos_50m) | 2025-09 |
+| 15 | TimesFM | `TFM.25` | [2.5-200M](https://huggingface.co/google/timesfm-2.5-200m-pytorch) | 2025-10 |
+| 16 | TiRex | `TiRex` | [1.1](https://huggingface.co/NX-AI/TiRex-1.1-gifteval) | 2025-10 |
+| 17 | Chronos 2 | `Chr.2` | [base](https://huggingface.co/amazon/chronos-2) | 2025-10 |
+| 18 | PatchTST-FM | `PTS.FM` | [r1](https://huggingface.co/ibm-granite/granite-timeseries-patchtst-fm-r1) | 2026-03 |
+| 19 | Toto 2 | `Toto2.T` | [2.0-4M](https://huggingface.co/Datadog/Toto-2.0-4m) | 2026-04 |
+| 20 | Toto 2 | `Toto2.S` | [2.0-22M](https://huggingface.co/Datadog/Toto-2.0-22m) | 2026-04 |
 
 ## Setup
 

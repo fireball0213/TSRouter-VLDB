@@ -12,7 +12,7 @@ models:
     name: "1.0-R-small"
     abbreviation: "Moi.S"
     source_repo: "Salesforce/moirai-1.0-R-small"
-    release_date: "2024-03-19"
+    release_date: "2024-03"
   - registry_key: "moirai_base"
     stage_id: 2
     family: "moirai"
@@ -20,7 +20,7 @@ models:
     name: "1.0-R-base"
     abbreviation: "Moi.B"
     source_repo: "Salesforce/moirai-1.0-R-base"
-    release_date: "2024-03-20"
+    release_date: "2024-03"
   - registry_key: "moirai_large"
     stage_id: 3
     family: "moirai"
@@ -28,7 +28,7 @@ models:
     name: "1.0-R-large"
     abbreviation: "Moi.L"
     source_repo: "Salesforce/moirai-1.0-R-large"
-    release_date: "2024-03-21"
+    release_date: "2024-03"
   - registry_key: "timemoe_50m"
     stage_id: 4
     family: "timemoe"
@@ -36,7 +36,7 @@ models:
     name: "50M"
     abbreviation: "TMoE.50"
     source_repo: "Maple728/TimeMoE-50M"
-    release_date: "2024-09-21"
+    release_date: "2024-09"
   - registry_key: "chronos_bolt_tiny"
     stage_id: 5
     family: "chronos"
@@ -44,7 +44,7 @@ models:
     name: "bolt-tiny"
     abbreviation: "Chr.bT"
     source_repo: "amazon/chronos-bolt-tiny"
-    release_date: "2024-11-10"
+    release_date: "2024-11"
   - registry_key: "chronos_bolt_mini"
     stage_id: 6
     family: "chronos"
@@ -52,7 +52,7 @@ models:
     name: "bolt-mini"
     abbreviation: "Chr.bM"
     source_repo: "amazon/chronos-bolt-mini"
-    release_date: "2024-11-11"
+    release_date: "2024-11"
   - registry_key: "chronos_bolt_small"
     stage_id: 7
     family: "chronos"
@@ -60,7 +60,7 @@ models:
     name: "bolt-small"
     abbreviation: "Chr.bS"
     source_repo: "amazon/chronos-bolt-small"
-    release_date: "2024-11-12"
+    release_date: "2024-11"
   - registry_key: "chronos_bolt_base"
     stage_id: 8
     family: "chronos"
@@ -68,7 +68,7 @@ models:
     name: "bolt-base"
     abbreviation: "Chr.bB"
     source_repo: "amazon/chronos-bolt-base"
-    release_date: "2024-11-13"
+    release_date: "2024-11"
   - registry_key: "toto_base"
     stage_id: 9
     family: "toto"
@@ -76,7 +76,7 @@ models:
     name: "Toto-Open-Base-1.0"
     abbreviation: "Toto"
     source_repo: "Datadog/Toto-Open-Base-1.0"
-    release_date: "2025-05-06"
+    release_date: "2025-05"
   - registry_key: "moirai2_small"
     stage_id: 10
     family: "moirai2"
@@ -84,7 +84,7 @@ models:
     name: "2.0-R-small"
     abbreviation: "Moi2.S"
     source_repo: "Salesforce/moirai-2.0-R-small"
-    release_date: "2025-08-06"
+    release_date: "2025-08"
   - registry_key: "flowstate_r1"
     stage_id: 11
     family: "flowstate"
@@ -92,7 +92,7 @@ models:
     name: "flowstate"
     abbreviation: "Flo.r1"
     source_repo: "ibm-granite/granite-timeseries-flowstate-r1"
-    release_date: "2025-09-12"
+    release_date: "2025-09"
   - registry_key: "kairos_10m"
     stage_id: 12
     family: "kairos"
@@ -100,7 +100,7 @@ models:
     name: "Kairos-10M"
     abbreviation: "Kai.10"
     source_repo: "mldi-lab/Kairos_10m"
-    release_date: "2025-09-28"
+    release_date: "2025-09"
   - registry_key: "kairos_23m"
     stage_id: 13
     family: "kairos"
@@ -108,7 +108,7 @@ models:
     name: "Kairos-23M"
     abbreviation: "Kai.23"
     source_repo: "mldi-lab/Kairos_23m"
-    release_date: "2025-09-29"
+    release_date: "2025-09"
   - registry_key: "kairos_50m"
     stage_id: 14
     family: "kairos"
@@ -116,7 +116,7 @@ models:
     name: "Kairos-50M"
     abbreviation: "Kai.50"
     source_repo: "mldi-lab/Kairos_50m"
-    release_date: "2025-09-30"
+    release_date: "2025-09"
   - registry_key: "timesfm_2_5"
     stage_id: 15
     family: "timesfm"
@@ -124,7 +124,7 @@ models:
     name: "2.5-200m-pytorch"
     abbreviation: "TFM.25"
     source_repo: "google/timesfm-2.5-200m-pytorch"
-    release_date: "2025-10-01"
+    release_date: "2025-10"
   - registry_key: "tirex_1_1"
     stage_id: 16
     family: "tirex"
@@ -132,7 +132,7 @@ models:
     name: "TiRex-1.1-gifteval"
     abbreviation: "TiRex"
     source_repo: "NX-AI/TiRex-1.1-gifteval"
-    release_date: "2025-10-06"
+    release_date: "2025-10"
   - registry_key: "chronos2_base"
     stage_id: 17
     family: "chronos2"
@@ -140,7 +140,7 @@ models:
     name: "base"
     abbreviation: "Chr.2"
     source_repo: "amazon/chronos-2"
-    release_date: "2025-10-30"
+    release_date: "2025-10"
   - registry_key: "patchtst_r1"
     stage_id: 18
     family: "patchtst"
@@ -148,7 +148,7 @@ models:
     name: "patchtst-fm-r1"
     abbreviation: "PTS.FM"
     source_repo: "ibm-granite/granite-timeseries-patchtst-fm-r1"
-    release_date: "2026-03-18"
+    release_date: "2026-03"
   - registry_key: "toto2_4m"
     stage_id: 19
     family: "toto2"
@@ -156,7 +156,7 @@ models:
     name: "Toto-2.0-4m"
     abbreviation: "Toto2.T"
     source_repo: "Datadog/Toto-2.0-4m"
-    release_date: "2026-04-14"
+    release_date: "2026-04"
   - registry_key: "toto2_22m"
     stage_id: 20
     family: "toto2"
@@ -164,4 +164,4 @@ models:
     name: "Toto-2.0-22m"
     abbreviation: "Toto2.S"
     source_repo: "Datadog/Toto-2.0-22m"
-    release_date: "2026-04-15"
+    release_date: "2026-04"
