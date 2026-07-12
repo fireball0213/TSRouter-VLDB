@@ -2,7 +2,7 @@
 
 This repository contains the public implementation and reproduction package for TSRouter and TSFM-ZooBench.
 
-**Release:** `v1.1`
+**Release:** `v1.0`
 
 Time-series foundation models (TSFMs) are increasingly deployed as a shared model zoo rather than selected once for a fixed benchmark. In that setting, a forecasting service must select a model for each incoming request while the zoo grows and new model evidence becomes available. TSRouter addresses this problem with a capability index that represents model behavior across time-series contexts, enabling efficient request-level ranking without evaluating every candidate model for every request.
 
