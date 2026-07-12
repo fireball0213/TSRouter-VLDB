@@ -2,6 +2,8 @@
 
 This repository contains the public implementation and reproduction package for TSRouter and TSFM-ZooBench.
 
+**Release:** `v1.0`
+
 Time-series foundation models (TSFMs) are increasingly deployed as a shared model zoo rather than selected once for a fixed benchmark. In that setting, a forecasting service must select a model for each incoming request while the zoo grows and new model evidence becomes available. TSRouter addresses this problem with a capability index that represents model behavior across time-series contexts, enabling efficient request-level ranking without evaluating every candidate model for every request.
 
 TSRouter exposes three operations for maintaining and using the index:
@@ -12,11 +14,25 @@ TSRouter exposes three operations for maintaining and using the index:
 
 TSFM-ZooBench extends a standard forecasting workload into this evolving-service setting. It uses GIFT-Eval as its public forecasting workload, then adds an ordered TSFM registry, capability profiling, request-level routing, and model-arrival evaluation. The repository includes the method implementation, paper baseline implementations, workflow commands, and reproduction materials.
 
+## Overview
+
+![TSRouter problem setting: forecasting tasks arrive continuously, the available TSFM zoo grows over time, model winners are workload-dependent, and routing must balance quality, efficiency, and insertion cost.](assets/figures/fig1.png)
+
+*Figure 1: TSRouter is designed for request-level TSFM selection in a growing model zoo.*
+
+![TSRouter architecture: PROFILE builds reusable capability profiles, ROUTE ranks models without online candidate forwarding, and INSERT refreshes affected index records when a model arrives.](assets/figures/fig2.png)
+
+*Figure 2: PROFILE, ROUTE, and INSERT in the TSRouter architecture.*
+
 ## Artifacts
 
 [**TSRouter-VLDB Artifacts on Hugging Face**](https://huggingface.co/datasets/LAMDA-shihn/tsrouter-v1-artifacts)
 
 The artifact repository provides released result records, capability representations, request-sample caches, profile inputs, and table inputs. The forecasting workload is available from the [official GIFT-Eval repository](https://huggingface.co/datasets/Salesforce/GiftEval).
+
+## License
+
+TSRouter-VLDB code is licensed under [Apache-2.0](LICENSE). Benchmark, model, checkpoint, and artifact terms are described in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and their original public sources.
 
 ## TSFM Registry
 
@@ -54,7 +70,17 @@ git clone https://github.com/fireball0213/TSRouter-VLDB.git
 cd TSRouter-VLDB
 ```
 
-Install the lightweight dependencies for artifact checks and table preview:
+Create the validated Linux GPU environment:
+
+```bash
+conda env create -f environment-linux-gpu.yml
+conda activate tsrouter-v1
+python scripts/check_environment.py --require-gpu --strict
+```
+
+The validated configuration uses Python 3.11.15, PyTorch 2.5.1 with CUDA 12.4, NVIDIA driver 560.35.03, and NVIDIA RTX 3090 GPUs with 24 GiB memory. The `results` and `route` levels do not require a GPU; the `core` level requires a CUDA-capable environment.
+
+To install only the lightweight dependencies for artifact checks and table preview:
 
 ```bash
 python -m pip install -r requirements_core.txt

@@ -224,6 +224,10 @@ def main() -> int:
     checks.extend(check_method_source_files())
     checks.extend(check_baseline_scope(profiles))
     checks.extend(check_reuse_levels())
+    release_id = (RELEASE_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    pyproject = (RELEASE_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    checks.append(result("release:version_file", release_id == "v1.0", release_id))
+    checks.append(result("release:package_version", 'version = "1.0"' in pyproject, "1.0"))
 
     payload = {
         "ok": all(item["ok"] for item in checks),

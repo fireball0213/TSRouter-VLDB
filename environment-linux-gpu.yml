@@ -1,0 +1,14 @@
+name: tsrouter-v1
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11.15
+  - pip
+  - pytorch=2.5.1
+  - pytorch-cuda=12.4
+  - pip:
+      - -r requirements_core.txt
+      - -r requirements_method.txt

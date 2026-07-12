@@ -8,7 +8,14 @@ import time
 from pathlib import Path
 
 
-METADATA_FILES = ("README.md", "LICENSE", "manifest.json", "checksums.sha256")
+METADATA_FILES = (
+    "README.md",
+    "LICENSE",
+    "manifest.json",
+    "checksums.sha256",
+    "figures/fig1.png",
+    "figures/fig1.pdf",
+)
 
 
 def format_bytes(value: int) -> str:
